@@ -209,7 +209,7 @@
     </div>
 
     <script>
-        // --- Cloud Sync Configuration (已更新为您提供的新信息) ---
+        // --- Cloud Sync Configuration ---
         const JSONBIN_ID = '69174442ae596e708f5901ae'; 
         const JSONBIN_MASTER_KEY = '$2a$10$ol9N5tLV0G2AnDYaF4sO4O2l0RoR8OSXagA4IUy2wiwdntZDuzRh2';
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
@@ -323,13 +323,11 @@
         const tableNotesInput = document.getElementById('table-notes-input'); // 获取备注输入框
         let currentTableNumber = null;
         
-        // 修改: 找到当前桌号订单项的辅助函数
         function findItemInCurrentOrder(id) {
             if (!currentTableNumber || !tableOrders.has(currentTableNumber)) return null;
             return tableOrders.get(currentTableNumber).items.find(item => item.id === id);
         }
         
-        // 修改: 计算总价和总份数
         function calculateOrderTotal(orderData) { return orderData.items.reduce((total, item) => total + (item.price * item.quantity), 0); }
         function calculateOrderCount(orderData) { return orderData.items.reduce((count, item) => count + item.quantity, 0); }
         
@@ -340,7 +338,7 @@
             return { latestMenu, categories };
         }
         
-        // 修改: 切换桌号逻辑
+        // 切换桌号逻辑
         function selectNewTable(tableNumber) {
             currentTableNumber = tableNumber;
             tableDisplay.textContent = `当前桌号: ${tableNumber}`;
@@ -360,7 +358,7 @@
             hideModal(tableModal);
         }
 
-        // 修改: 渲染桌号网格 (判断是否占用现在需要检查 items 数组)
+        // 渲染桌号网格
         function renderTableGrid() {
             const tableGrid = document.getElementById('tableGrid');
             tableGrid.innerHTML = '';
@@ -442,7 +440,7 @@
             });
         }
 
-        // 修改: 更新数量逻辑
+        // 更新数量逻辑
         async function updateQuantity(id, change) {
             const currentOrderData = tableOrders.get(currentTableNumber);
             let currentItems = currentOrderData.items; // 获取 items 数组
@@ -479,7 +477,7 @@
             updateTableStatus();
         }
 
-        // 修改: 更新总计逻辑
+        // 更新总计逻辑
         function updateTotals() {
             const currentOrderData = currentTableNumber ? tableOrders.get(currentTableNumber) || { items: [] } : { items: [] };
             const total = calculateOrderTotal(currentOrderData);
@@ -489,7 +487,7 @@
             orderCountElement.textContent = count.toLocaleString();
         }
 
-        // 修改: 更新桌号状态 (检查 items 数组)
+        // 更新桌号状态
         function updateTableStatus() {
             const tableButton = document.querySelector(`.table-number-btn[onclick*="'${currentTableNumber}'"]`);
             if (tableButton) {
@@ -498,7 +496,7 @@
             }
         }
         
-        // 修改: 渲染订单详情逻辑 (新增显示备注)
+        // 渲染订单详情逻辑 (新增显示备注)
         function renderOrderDetails() {
             const currentOrderData = tableOrders.get(currentTableNumber) || { items: [], notes: '' };
             const currentItems = currentOrderData.items;
@@ -535,7 +533,7 @@
             showModal(orderModal);
         }
 
-        // 修改: 结算逻辑 (将备注存入 income_data)
+        // 结算逻辑 (将备注存入 income_data)
         async function checkoutAndSaveIncome() {
             if (confirm(`确定结算桌号 ${currentTableNumber} 的订单吗？`)) {
                 const currentOrderData = tableOrders.get(currentTableNumber) || { items: [], notes: '' };
@@ -577,7 +575,7 @@
             }
         }
 
-        // 修改: 清空订单逻辑 (清空 items 和 notes)
+        // 清空订单逻辑 (清空 items 和 notes)
         async function resetOrder() {
             if (confirm(`确定要清空桌号 ${currentTableNumber} 的订单和备注吗？`)) {
                 
@@ -604,7 +602,7 @@
 
         // --- 事件绑定和初始化 ---
         function bindEventListeners() {
-            // FIX: 导航入口改为正确的链接
+            // 确保导航入口使用正确的文件名进行跳转，且只在点击时执行
             document.getElementById('editMenuBtn').onclick = () => window.location.href = 'edit_menu.html';
             document.getElementById('incomeSummaryBtn').onclick = () => window.location.href = 'income_summary.html';
             document.getElementById('purchaseManagerBtn').onclick = () => window.location.href = '16.36.html';
@@ -632,7 +630,7 @@
             });
 
 
-            // 模态框和核心交互 (保持不变)
+            // 模态框和核心交互
             document.getElementById('table-display').onclick = () => {
                 renderTableGrid();
                 showModal(tableModal);
@@ -663,7 +661,7 @@
             }
         }
         
-        // 页面启动
+        // 页面启动 (这里是关键！确保只有初始化操作)
         document.addEventListener('DOMContentLoaded', async () => {
             await loadCloudData();
             document.getElementById('loading-overlay').style.display = 'none';
