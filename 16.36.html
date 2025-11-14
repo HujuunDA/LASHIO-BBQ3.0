@@ -11,10 +11,9 @@
             margin: 0;
             background-color: #f7f7f7; /* 浅灰色背景 */
             color: #1c1c1e; /* 深色文字 */
-            padding-top: 0; 
         }
         
-        /* 🌟 头部导航栏样式 (还原蓝色 - 保持原版颜色) */
+        /* 🌟 新增：头部导航栏样式 */
         .header-bar {
             background-color: #007aff; /* 蓝色 */
             color: white;
@@ -24,10 +23,10 @@
             align-items: center;
             width: 100%;
             box-sizing: border-box;
-            margin-bottom: 20px; 
-            border-radius: 0 0 16px 16px; 
+            margin-bottom: 20px; /* 添加底部间距 */
+            border-radius: 0 0 16px 16px; /* 底部圆角 */
             position: sticky;
-            top: 0; 
+            top: 0;
             z-index: 99;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
@@ -36,7 +35,6 @@
             font-size: 24px;
             color: white;
         }
-        /* 新增：返回点单按钮 */
         .back-button {
             background-color: #ff3b30; /* 红色 */
             color: white;
@@ -47,577 +45,982 @@
             font-weight: 600;
             font-size: 16px;
         }
+        /* 🌟 结束：头部导航栏样式 */
+
+        .container {
+            max-width: 900px;
+            margin: 30px auto;
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 16px; /* 柔和的圆角 */
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); /* 极轻微的阴影 */
+            transition: box-shadow 0.3s;
+        }
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #3a3a3c;
+            text-align: center;
+            margin-bottom: 25px;
+        }
         
-        /* 2. 主要布局和容器 */
-        .container { max-width: 900px; margin: 30px auto; background: #ffffff; padding: 30px; border-radius: 16px; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); }
+        /* 2. Tab 切换样式 (Segmented Control Style) */
+        .tabs {
+            display: flex;
+            background-color: #f0f0f0; 
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 30px;
+        }
+        .tab-button {
+            flex-grow: 1;
+            padding: 10px 15px;
+            border: none;
+            background: none;
+            font-size: 15px;
+            font-weight: 600;
+            color: #8e8e93; 
+            cursor: pointer;
+            border-radius: 8px;
+            transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
+        }
+        .tab-button.active {
+            background-color: #ffffff; 
+            color: #1c1c1e; 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+        }
+        .tab-content {
+            display: none;
+            padding: 10px 0;
+        }
+        .tab-content.active {
+            display: block;
+        }
 
-        /* 3. Tab 控件样式 */
-        .tabs { display: flex; background-color: #f0f0f0; border-radius: 10px; padding: 4px; margin-bottom: 30px; }
-        .tab-button { flex-grow: 1; padding: 10px 15px; border: none; background: none; font-size: 15px; font-weight: 600; color: #8e8e93; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
-        .tab-button.active { background-color: #ffffff; color: #1c1c1e; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
-        .tab-content { display: none; padding: 10px 0; }
-        .tab-content.active { display: block; }
+        /* 3. 下单页面 (选品) 样式 */
+        #product-list h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #5856d6; 
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5e5ea;
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+        .product-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+            position: relative; 
+        }
+        .product-item input[type="checkbox"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #c7c7cc;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .product-item input[type="checkbox"]:checked {
+            background-color: #007aff; 
+            border-color: #007aff;
+        }
+        .product-item input[type="checkbox"]:checked::before {
+            content: '✓';
+            color: white;
+            font-size: 14px;
+            line-height: 18px;
+            text-align: center;
+            display: block;
+        }
+        .product-item label {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            font-size: 16px;
+            color: #1c1c1e;
+        }
+        
+        /* 编辑/删除按钮容器 */
+        .product-actions {
+            margin-left: 15px;
+            display: flex;
+            gap: 5px;
+        }
 
-        /* 4. 模板列表/商品列表样式 */
-        .category-container { margin-bottom: 20px; border: 1px solid #e0e0e0; border-radius: 10px; overflow: hidden; }
-        .category-header { background-color: #f0f0f0; padding: 10px 15px; font-weight: 700; color: #007aff; border-bottom: 1px solid #e0e0e0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .category-header span { font-size: 14px; color: #8e8e93; font-weight: 500;}
-        .product-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 15px; border-bottom: 1px solid #f0f0f0; }
-        .product-item:last-child { border-bottom: none; }
-        .product-item .name { font-size: 16px; font-weight: 500; }
-        .product-item input[type="checkbox"] { width: 20px; height: 20px; accent-color: #007aff; }
+        .action-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+            font-size: 16px;
+            color: #8e8e93; 
+            transition: color 0.1s;
+        }
+        .action-button:hover {
+            color: #5856d6;
+        }
+        .delete-button:hover {
+            color: #ff3b30;
+        }
 
-        /* 5. 购物车/清单样式 */
-        #cart-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        #cart-table th, #cart-table td { padding: 12px; text-align: left; border-bottom: 1px solid #e0e0e0; }
-        #cart-table th { background-color: #f0f0f0; font-weight: 700; color: #4a4a4f; }
-        #cart-table tr:last-child td { border-bottom: none; }
-        .cart-item-name { cursor: pointer; font-weight: 500; }
-        .cart-item-name.purchased { text-decoration: line-through; color: #8e8e93; }
-        .cart-item-price-input { width: 80px; padding: 5px; border: 1px solid #ccc; border-radius: 4px; text-align: right; font-size: 15px; }
-        #cart-total-display { text-align: right; font-size: 1.5em; font-weight: 700; margin-top: 20px; color: #34c759; }
+        /* 结算和新增控件 */
+        .checkout-bar {
+            text-align: center;
+            margin-top: 40px;
+        }
+        .checkout-bar button {
+            background-color: #34c759; 
+            color: white;
+            border: none;
+            padding: 14px 40px;
+            font-size: 17px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(52, 199, 89, 0.3);
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .checkout-bar button:active {
+            background-color: #2eaf4c;
+            box-shadow: none;
+        }
+        
+        /* *** 样式修复：新增项输入框统一 *** */
+        .add-new-control {
+            display: flex; 
+            flex-wrap: nowrap; /* 确保不换行 */
+            gap: 8px; 
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f2f2f7; 
+            border-radius: 12px;
+            align-items: center;
+        }
+        .add-new-control input, .add-new-control select, .add-new-control button {
+            padding: 10px;
+            border: 1px solid #d1d1d6;
+            border-radius: 8px;
+            font-size: 15px;
+            box-sizing: border-box;
+            background-color: #ffffff; 
+            min-height: 40px; /* 统一高度 */
+        }
+        .add-new-control input {
+            flex-grow: 1;
+            -webkit-appearance: none; 
+            appearance: none;
+            min-width: 100px; /* 允许压缩 */
+            border: 1px solid #d1d1d6;
+        }
+        .add-new-control select {
+            width: 120px; /* 稍微缩小下拉框 */
+            flex-shrink: 0;
+            text-overflow: ellipsis; 
+            border: 1px solid #d1d1d6;
+        }
+        .add-new-control button {
+            width: 100px; /* 缩小按钮 */
+            background-color: #007aff; 
+            color: white;
+            border: none;
+            padding: 10px 0;
+            cursor: pointer;
+            flex-shrink: 0;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        /* *** 修复结束 *** */
 
-        /* 6. 底部控制和模板管理 */
-        .checkout-bar { text-align: center; margin-top: 30px; }
-        .checkout-bar button { background-color: #34c759; color: white; border: none; padding: 14px 40px; font-size: 17px; font-weight: 600; border-radius: 12px; cursor: pointer; box-shadow: 0 4px 10px rgba(52, 199, 89, 0.3); transition: all 0.2s; }
 
-        .add-new-control { display: flex; gap: 10px; margin-top: 20px; }
-        .add-new-control input, .add-new-control select { padding: 10px; border: 1px solid #ccc; border-radius: 8px; flex-grow: 1; }
-        .add-new-control button { width: 100px; background-color: #007aff; color: white; border: none; padding: 10px 0; cursor: pointer; flex-shrink: 0; font-weight: 600; border-radius: 8px; }
+        /* 4. 购物车/结算页面样式 (同上) */
+        #cart-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+        #cart-table th, #cart-table td {
+            padding: 12px 0;
+            border-bottom: 1px solid #e5e5ea;
+            text-align: left;
+        }
+        #cart-table th {
+            font-weight: 600;
+            color: #8e8e93;
+            background: none; 
+            border-bottom: 2px solid #d1d1d6;
+        }
+        
+        .cart-item-row.purchased td {
+            color: #aeaeb2; 
+            background-color: transparent;
+        }
+        .cart-item-row.purchased .item-name {
+            text-decoration: line-through;
+        }
 
-        .template-actions { display: flex; gap: 5px; }
-        .template-actions button { padding: 5px 10px; border: none; border-radius: 5px; cursor: pointer; font-weight: 500; }
-        .template-actions .delete-btn { background-color: #ff3b30; color: white; }
-        .template-actions .edit-btn { background-color: #ffcc00; color: #1c1c1e; }
+        .price-input {
+            width: 130px; 
+            padding: 6px 8px;
+            border: 1px solid #d1d1d6;
+            border-radius: 6px;
+            text-align: right;
+            font-size: 15px;
+            background-color: #f9f9f9; 
+            -webkit-appearance: none; 
+            appearance: none;
+        }
+        
+        /* 总计显示 (Card Style) */
+        #cart-total-display {
+            font-size: 20px;
+            font-weight: 700;
+            margin-top: 30px;
+            padding: 15px 20px;
+            background-color: #e5e5ea; 
+            border-radius: 12px;
+            color: #3a3a3c;
+            text-align: right;
+            border: none;
+        }
+        
+        /* 拷贝按钮样式 */
+        .copy-button {
+            width: 100%;
+            background-color: #007aff; 
+            color: white;
+            border: none;
+            padding: 14px 0;
+            font-size: 17px;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0, 122, 255, 0.3);
+            margin-top: 20px;
+            margin-bottom: 10px;
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .copy-button:active {
+            background-color: #005bb5;
+            box-shadow: none;
+        }
 
-        .copy-button { background-color: #007aff; color: white; border: none; padding: 12px 25px; font-size: 16px; font-weight: 600; border-radius: 12px; cursor: pointer; margin-top: 20px; margin-bottom: 10px; }
-        .reset-button { background-color: #ff3b30; color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; margin-top: 20px; font-weight: 600; }
-
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); color: #007aff; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: 600; z-index: 1000; transition: opacity 0.3s; }
+        /* 红色按钮 (Destructive Action) */
+        .reset-button {
+            background-color: #ff3b30; 
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: 600;
+            box-shadow: 0 2px 6px rgba(255, 59, 48, 0.3);
+            transition: background-color 0.2s, box-shadow 0.2s;
+        }
+        .reset-button:active {
+            background-color: #d82b2b;
+            box-shadow: none;
+        }
+        
+        /* 加载提示样式 */
+        #loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            color: #007aff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            font-weight: 600;
+            z-index: 1000;
+            transition: opacity 0.3s;
+        }
     </style>
 </head>
 <body>
-    
-    <div id="loading-overlay" style="display: flex;"> 正在从云端加载采购清单... 🚀 </div>
 
-    <div class="header-bar">
-        <h1>🛒 高级采购管理 (Ks)</h1>
-        <button class="back-button" onclick="goToOrderingPage()">返回点单</button> 
+<div class="header-bar">
+    <h1>🛒 高级采购管理 (Ks)</h1>
+    <button class="back-button" onclick="goToOrderingPage()">返回点单</button>
+</div>
+<div id="loading-overlay">
+    正在从云端加载采购清单... 🚀
+</div>
+
+<div class="container">
+    <div class="tabs" id="tab-controls">
+        <button class="tab-button active" data-tab="product-tab" onclick="openTab(event, 'product-tab')">🛍️ 选品清单</button>
+        <button class="tab-button" data-tab="cart-tab" onclick="openTab(event, 'cart-tab')">📋 结算购物车</button>
     </div>
 
-    <div class="container">
-        
-        <div class="tabs" id="tab-controls">
-            <button class="tab-button active" onclick="openTab(event, 'product-list')">🛒 选择采购项</button>
-            <button class="tab-button" onclick="openTab(event, 'cart')">📝 采购清单 (待完成)</button>
-            <button class="tab-button" onclick="openTab(event, 'product-template')">⚙️ 管理采购模板</button>
-        </div>
-
-        <div id="product-list" class="tab-content active">
-            <div id="product-list-container">
-                </div>
-            
-            <div class="checkout-bar">
-                <button onclick="addSelectedToCart()">➕ 添加到采购清单</button>
+    <div id="product-tab" class="tab-content active">
+        <div id="product-list">
             </div>
+        
+        <div class="checkout-bar">
+            <button onclick="addSelectedToCart()">✅ 加入购物车并前往结算</button>
         </div>
+        
+        <div class="add-new-control">
+            <input type="text" id="new-product-input" placeholder="添加新的采购项到清单"> 
+            <select id="new-product-category">
+                </select>
+            <button class="add-to-list-button" onclick="addNewProductToList()">添加到清单</button>
+        </div>
+    </div>
 
-        <div id="cart" class="tab-content">
-            <h2>采购清单</h2>
-            <table id="cart-table">
-                <thead>
-                    <tr>
-                        <th style="width: 50%;">项目 (点击清空价格)</th>
-                        <th style="text-align: right; width: 30%;">数量/单位</th>
-                        <th style="text-align: right; width: 20%;">价格 (Ks)</th>
-                    </tr>
-                </thead>
-                <tbody id="cart-table-body">
+    <div id="cart-tab" class="tab-content">
+        <table id="cart-table">
+            <thead>
+                <tr>
+                    <th style="width: 5%;">✓</th>
+                    <th style="width: 65%;">采购品项</th>
+                    <th style="width: 30%; text-align: right;">价格</th>
+                </tr>
+            </thead>
+            <tbody id="cart-table-body">
                 </tbody>
-            </table>
-            
-            <div id="cart-total-display">总计: 0 Ks</div>
-            
-            <div class="checkout-bar" style="margin-top: 20px; display: flex; flex-direction: column; align-items: center;">
-                <button class="copy-button" onclick="copyCartSummary()">📋 复制清单总结</button>
-                <button class="reset-button" onclick="resetCart()">🗑️ 清空已完成项目</button>
-            </div>
+        </table>
+
+        <div id="cart-total-display">
+            总支出: Ks 0
         </div>
         
-        <div id="product-template" class="tab-content">
-            <h2>管理采购模板</h2>
-            <div id="template-list">
-                </div>
+        <button class="copy-button" onclick="copyCartSummary()">📋 拷贝采购清单与总支出</button>
 
-            <div class="add-new-control">
-                <input type="text" id="newProductName" placeholder="新的采购项名称" required>
-                <select id="newProductCategory">
-                    </select>
-                <button onclick="addProductTemplate()">添加</button>
-            </div>
-            
-        </div>
-
+        <button class="reset-button" onclick="resetCart()">清空已完成项目</button>
     </div>
+</div>
+
+<script>
+    // *********************************************************************************
+    // *** 核心配置信息 - 已确保与您提供的密钥保持一致 ***
+    // *********************************************************************************
+    const JSONBIN_ID = '69158efd43b1c97be9aaa457'; // ✅ 您的 Bin ID
+    const JSONBIN_MASTER_KEY = '$2a$10$sDEJmJM09AqeDdTs7fLnCuerS4mWPFepEeFhDn9gNaT86Lwf2cUXu'; // ✅ 您的 Master Key
+    const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
     
-    <script>
-        // --- Cloud Sync Configuration (已更新为您提供的新信息) ---
-        const JSONBIN_ID = '69174442ae596e708f5901ae'; 
-        const JSONBIN_MASTER_KEY = '$2a$10$ol9N5tLV0G2AnDYaF4sO4O2l0RoR8OSXagA4IUy2wiwdntZDuzRh2';
-        const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
+    // --- 性能优化：缓存 DOM 引用 ---
+    const DOM = {
+        productList: document.getElementById('product-list'),
+        newProductCategory: document.getElementById('new-product-category'),
+        newProductInput: document.getElementById('new-product-input'),
+        cartTableBody: document.getElementById('cart-table-body'),
+        cartTotalDisplay: document.getElementById('cart-total-display'),
+        loadingOverlay: document.getElementById('loading-overlay'),
+    };
 
-        const CURRENCY_SUFFIX = ' Ks';
-        const templateListContainer = document.getElementById('template-list');
-        const cartTableBody = document.getElementById('cart-table-body');
-        const productListContainer = document.getElementById('product-list-container');
-        const categorySelect = document.getElementById('newProductCategory');
-        const newProductNameInput = document.getElementById('newProductName');
+    // --- 货币符号常量 ---
+    const CURRENCY_SYMBOL = 'Ks'; 
+    const CURRENCY_SUFFIX = ` ${CURRENCY_SYMBOL}`; 
+    
+    const formatter = new Intl.NumberFormat('en-US', {
+        minimumFractionDigits: 0, 
+        maximumFractionDigits: 0
+    });
+    
+    // 核心数据结构
+    let cloudData = {
+        productTemplate: {}, // 主清单
+        cartData: []         // 购物车数据
+    };
+    
+    let grandTotalCost = 0; 
 
-        let globalCloudData = {
-            menu_data: [],
-            table_orders: {}, 
-            income_data: { total: 0, closedOrders: [] },
-            purchase_data: { productTemplate: {}, cartData: [] } // 默认结构
-        };
-        let cloudData = globalCloudData.purchase_data; 
+    // --- 智能分类关键字映射 (保持不变) ---
+    const KEYWORD_MAP = {
+        '鸡': '肉类/海鲜 🦞🥩', '牛': '肉类/海鲜 🦞🥩', '猪': '肉类/海鲜 🦞🥩',
+        '羊': '肉类/海鲜 🦞🥩', '鱼': '肉类/海鲜 🦞🥩', '虾': '肉类/海鲜 🦞🥩',
+        '海鲜': '肉类/海鲜 🦞🥩', '肉': '肉类/海鲜 🦞🥩',
+        '菜': '蔬菜 🥬', '菇': '蔬菜 🥬', '果': '蔬菜 🥬', '豆': '蔬菜 🥬', '椒': '蔬菜 🥬',
+        '料': '调料/酱料 🧂🧄', '酱': '调料/酱料 🧂🧄', '醋': '调料/酱料 🧂🧄',
+        '油': '调料/酱料 🧂🧄', '葱': '调料/酱料 🧂🧄', '蒜': '调料/酱料 🧂🧄',
+        '盐': '调料/酱料 🧂🧄', '姜': '调料/酱料 🧂🧄',
+    };
+
+    // --- 实用工具函数 (保持不变) ---
+    function parseFormattedPrice(formattedString) {
+        if (!formattedString) return '';
+        // 移除所有非数字字符，但保留英文句号（如果需要小数）
+        const cleanedString = String(formattedString).replace(/[^0-9.]/g, ''); 
+        return parseFloat(cleanedString) || '';
+    }
+
+    function formatPrice(number) {
+        const num = parseFloat(number);
+        if (isNaN(num) || num === 0) return '';
+        return formatter.format(num) + CURRENCY_SUFFIX;
+    }
+    
+    function getCategoryByKeyword(itemName) {
+        for (const keyword in KEYWORD_MAP) {
+            if (itemName.includes(keyword)) {
+                return KEYWORD_MAP[keyword];
+            }
+        }
+        return null; 
+    }
+
+    function sortCategory(categoryKey) {
+        if (cloudData.productTemplate[categoryKey]) {
+            cloudData.productTemplate[categoryKey].sort((a, b) => a.localeCompare(b, 'zh-CN'));
+        }
+    }
+    
+    function populateCategorySelect() {
+        let optionsHtml = '';
+        // 确保至少有一个其他，以防模板为空
+        if (Object.keys(cloudData.productTemplate).length === 0) {
+             optionsHtml += `<option value="其他/">其他</option>`;
+             cloudData.productTemplate["其他"] = [];
+        } else {
+             for (const category in cloudData.productTemplate) {
+                 optionsHtml += `<option value="${category}">${category}</option>`;
+             }
+        }
         
-        // --- Cloud Utilities ---
-        async function loadCloudData() {
-            try {
-                const response = await fetch(JSONBIN_URL + '/latest', {
-                    method: 'GET',
-                    headers: {
-                        'X-Master-Key': JSONBIN_MASTER_KEY,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                if (!response.ok) throw new Error(`Cloud fetch failed: ${response.statusText}`);
-                const data = await response.json();
-                if (data.record) {
-                    globalCloudData = data.record;
-                    if (!globalCloudData.purchase_data) globalCloudData.purchase_data = { productTemplate: {}, cartData: [] };
-                    cloudData = globalCloudData.purchase_data;
+        DOM.newProductCategory.innerHTML = optionsHtml;
+        if (DOM.newProductCategory.options.length > 0) {
+            DOM.newProductCategory.selectedIndex = 0;
+        }
+    }
+
+    // --- 云同步函数 ---
+    
+    async function loadProductsFromCloud() {
+        if (!JSONBIN_ID || !JSONBIN_MASTER_KEY) {
+             cloudData = { productTemplate: {"其他": ["示例商品"]}, cartData: [] };
+             DOM.loadingOverlay.textContent = "❗ 错误：请检查代码中的 Master Key 或 Bin ID。";
+             
+             for (const category in cloudData.productTemplate) {
+                sortCategory(category);
+            }
+            renderProductList();
+            populateCategorySelect(); 
+            renderCart(); 
+            
+            const savedTab = sessionStorage.getItem('activeTab') || 'product-tab';
+            openTab(null, savedTab);
+
+            DOM.loadingOverlay.style.opacity = '0';
+            setTimeout(() => DOM.loadingOverlay.style.display = 'none', 300);
+            return;
+        }
+
+        try {
+            const response = await fetch(JSONBIN_URL, {
+                method: 'GET',
+                headers: {
+                    'X-Master-Key': JSONBIN_MASTER_KEY 
                 }
-            } catch (error) {
-                console.error("加载云端数据失败，使用本地默认数据。", error);
-                alert("云端数据加载失败！请检查 JSONBin 配置或网络。");
-            }
-        }
+            });
 
-        async function saveProductsToCloud() {
-            globalCloudData.purchase_data = cloudData;
-            try {
-                const response = await fetch(JSONBIN_URL, {
-                    method: 'PUT',
-                    headers: {
-                        'X-Master-Key': JSONBIN_MASTER_KEY,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(globalCloudData)
-                });
-                if (!response.ok) throw new Error(`Cloud save failed: ${response.statusText}`);
-                console.log("采购数据已成功同步到云端。");
-                return true;
-            } catch (error) {
-                console.error("保存云端数据失败。", error);
-                alert("数据保存失败！请检查 JSONBin 配置或网络。");
-                return false;
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}. 请检查 Bin ID 和 Master Key。`);
             }
+
+            const json = await response.json();
+            
+            if (json && json.record && json.record.productTemplate && Array.isArray(json.record.cartData)) {
+                cloudData.productTemplate = json.record.productTemplate;
+                cloudData.cartData = json.record.cartData;
+            } else if (json && json.record && typeof json.record === 'object') {
+                // 如果 Bin 首次创建为空，或只包含初始 JSON，我们确保结构正确
+                if (!json.record.productTemplate) {
+                     cloudData.productTemplate = {"其他": []};
+                } else {
+                    cloudData.productTemplate = json.record.productTemplate;
+                }
+                if (!json.record.cartData) {
+                    cloudData.cartData = [];
+                } else {
+                    cloudData.cartData = json.record.cartData;
+                }
+            } else {
+                // 如果云端数据为空，初始化一个默认结构
+                cloudData.productTemplate = {"其他": []};
+                cloudData.cartData = [];
+            }
+        } catch (error) {
+            console.error('加载云端数据失败:', error);
+            DOM.loadingOverlay.textContent = `❌ 加载失败，请检查配置或 Bin 权限。详情: ${error.message}`;
+            alert("加载云端数据失败！请检查 JSONBin 配置是否正确，特别是 Bin ID 和 Master Key。");
+        } finally {
+            for (const category in cloudData.productTemplate) {
+                sortCategory(category);
+            }
+            renderProductList();
+            populateCategorySelect(); 
+            renderCart(); 
+            
+            const savedTab = sessionStorage.getItem('activeTab') || 'product-tab';
+            openTab(null, savedTab);
+
+            DOM.loadingOverlay.style.opacity = '0';
+            setTimeout(() => DOM.loadingOverlay.style.display = 'none', 300);
+        }
+    }
+
+    async function saveProductsToCloud() {
+        if (!JSONBIN_ID || !JSONBIN_MASTER_KEY) {
+            alert("❗ 警告：Master Key 或 Bin ID 缺失，数据无法上传！");
+            return;
         }
         
-        // --- 核心采购模板管理 (Tab 3) ---
-        function renderProductTemplate() {
-            templateListContainer.innerHTML = '';
-            const categories = Object.keys(cloudData.productTemplate).sort();
+        const dataToSave = cloudData; 
 
-            if (categories.length === 0) {
-                templateListContainer.innerHTML = '<p style="text-align: center; color: #8e8e93; padding: 30px;">暂无采购模板，请添加。</p>';
-                return;
+        try {
+            const response = await fetch(JSONBIN_URL, {
+                method: 'PUT', 
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Master-Key': JSONBIN_MASTER_KEY, 
+                    'X-Bin-Versioning': 'false' 
+                },
+                body: JSON.stringify(dataToSave)
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+        } catch (error) {
+            console.error('保存云端数据失败:', error);
+            alert("警告：数据保存到云端失败！请检查网络连接或 Master Key 是否有写入权限。");
+        }
+    }
+    
+    // --- 🌟 修复后的函数：返回点单页面函数 ---
+    function goToOrderingPage() {
+        try {
+            // 使用 window.location.href 进行跳转，目标是 index.html
+            window.location.href = 'index.html'; 
+        } catch (e) {
+            console.error("无法跳转到 index.html:", e);
+            alert("跳转失败，请确保 index.html 文件与当前文件在同一目录下。");
+        }
+    }
+    
+    // --- 初始化和加载 ---
 
-            categories.forEach(category => {
-                const categoryDiv = document.createElement('div');
-                categoryDiv.className = 'category-container';
-                categoryDiv.innerHTML = `<div class="category-header">${category}</div>`;
+    document.addEventListener('DOMContentLoaded', () => {
+        loadProductsFromCloud(); 
+    });
+
+    function openTab(evt, tabName) {
+        sessionStorage.setItem('activeTab', tabName);
+        
+        let tabcontent = document.getElementsByClassName("tab-content");
+        for (let i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].classList.remove("active");
+            tabcontent[i].style.display = "none";
+        }
+        
+        let tablinks = document.getElementsByClassName("tab-button");
+        for (let i = 0; i < tablinks.length; i++) {
+            tablinks[i].classList.remove("active");
+        }
+        
+        document.getElementById(tabName).classList.add("active");
+        document.getElementById(tabName).style.display = "block";
+        if (evt) {
+            evt.currentTarget.classList.add("active");
+        } else {
+            const initialTabButton = document.querySelector(`.tab-button[data-tab="${tabName}"]`);
+            if (initialTabButton) initialTabButton.classList.add("active");
+        }
+        
+        if (tabName === 'cart-tab') {
+            renderCart(); 
+        }
+    }
+    
+    // --- 1. 下单页面逻辑 (选品) ---
+
+    function renderProductList() {
+        let listHtml = '';
+        
+        const cartItemNames = new Set(cloudData.cartData.map(item => item.name));
+        
+        for (const category in cloudData.productTemplate) {
+            sortCategory(category); 
+            
+            listHtml += `<h2>${category}</h2>`;
+
+            const items = cloudData.productTemplate[category];
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                const uniqueId = `${category}-${item}`;
                 
-                cloudData.productTemplate[category].forEach(product => {
-                    const productItem = document.createElement('div');
-                    productItem.className = 'product-item';
-                    productItem.innerHTML = `
-                        <span class="name">${product}</span>
-                        <div class="template-actions">
-                            <button class="delete-btn" onclick="deleteProductTemplate('${category}', '${product}')">删除</button>
+                const escapedCategory = category.replace(/'/g, "\\'");
+                const escapedItem = item.replace(/'/g, "\\'");
+
+                // 如果项目在购物车中，则自动勾选
+                const isChecked = cartItemNames.has(item) ? 'checked' : '';
+
+                listHtml += `
+                    <div class="product-item">
+                        <input type="checkbox" id="item-${uniqueId}" data-item-name="${item}" ${isChecked}>
+                        <label for="item-${uniqueId}" style="flex-grow:1; cursor:pointer;">${item}</label>
+                        <div class="product-actions">
+                            <button class="action-button edit-button" 
+                                    onclick="editProduct('${escapedCategory}', '${escapedItem}')">
+                                ✏️
+                            </button>
+                            <button class="action-button delete-button" 
+                                    onclick="deleteProduct('${escapedCategory}', '${escapedItem}')">
+                                🗑️
+                            </button>
                         </div>
-                    `;
-                    categoryDiv.appendChild(productItem);
-                });
-                templateListContainer.appendChild(categoryDiv);
-            });
-            renderCategorySelect();
+                    </div>
+                `;
+            }
         }
+        DOM.productList.innerHTML = listHtml;
+    }
+    
+    async function editProduct(category, oldName) {
+        const newName = prompt(`请输入 "${oldName}" 的新名称：`, oldName);
+        
+        if (newName && newName.trim() !== oldName) {
+            const trimmedNewName = newName.trim();
+            
+            let isDuplicate = false;
+            for (const cat in cloudData.productTemplate) {
+                if (cloudData.productTemplate[cat].includes(trimmedNewName)) {
+                    isDuplicate = true;
+                    break;
+                }
+            }
 
-        function renderCategorySelect() {
-            const categories = Object.keys(cloudData.productTemplate).sort();
-            categorySelect.innerHTML = '<option value="">-- 选择分类 --</option>';
-            categories.forEach(cat => {
-                categorySelect.innerHTML += `<option value="${cat}">${cat}</option>`;
-            });
-            categorySelect.innerHTML += '<option value="new_category">➕ 新增分类...</option>';
-
-            categorySelect.onchange = function() {
-                if (this.value === 'new_category') {
-                    const newCat = prompt('请输入新的分类名称:');
-                    if (newCat) {
-                        const newOpt = document.createElement('option');
-                        newOpt.value = newCat;
-                        newOpt.textContent = newCat;
-                        categorySelect.insertBefore(newOpt, categorySelect.lastChild);
-                        categorySelect.value = newCat;
-                    } else {
-                        categorySelect.value = '';
+            if (isDuplicate) {
+                alert(`"${trimmedNewName}" 已经在清单中，请使用其他名称！`);
+                return;
+            }
+            
+            const list = cloudData.productTemplate[category];
+            const oldIndex = list.indexOf(oldName);
+            
+            if (oldIndex !== -1) {
+                list[oldIndex] = trimmedNewName;
+                sortCategory(category);
+                
+                for (let i = 0; i < cloudData.cartData.length; i++) {
+                    if (cloudData.cartData[i].name === oldName) {
+                        cloudData.cartData[i].name = trimmedNewName;
+                        break; 
                     }
                 }
-            };
-        }
-
-        async function addProductTemplate() {
-            const name = newProductNameInput.value.trim();
-            let category = categorySelect.value;
-            
-            if (!name) { alert('请输入采购项名称。'); return; }
-            if (!category) { alert('请选择或输入分类。'); return; }
-
-            if (category === 'new_category') {
-                category = prompt('请输入新的分类名称:');
-                if (!category) return;
-            }
-
-            if (!cloudData.productTemplate[category]) {
-                cloudData.productTemplate[category] = [];
-            }
-            
-            // 避免重复
-            if (cloudData.productTemplate[category].includes(name)) {
-                alert(`"${name}" 已经在 "${category}" 分类中。`);
-                return;
-            }
-
-            cloudData.productTemplate[category].push(name);
-            cloudData.productTemplate[category].sort();
-            
-            const saved = await saveProductsToCloud();
-            if (saved) {
-                newProductNameInput.value = '';
-                categorySelect.value = '';
-                renderProductTemplate();
-            }
-        }
-
-        async function deleteProductTemplate(category, product) {
-            if (confirm(`确定要删除采购模板 "${product}" 吗？`)) {
-                cloudData.productTemplate[category] = cloudData.productTemplate[category].filter(p => p !== product);
                 
-                // 如果分类下没有项目了，则删除分类
-                if (cloudData.productTemplate[category].length === 0) {
-                    delete cloudData.productTemplate[category];
-                }
+                await saveProductsToCloud();
                 
-                const saved = await saveProductsToCloud();
-                if (saved) {
-                    renderProductTemplate();
-                }
-            }
-        }
-        
-        // --- 采购选择列表 (Tab 1) ---
-        function renderProductList() {
-            productListContainer.innerHTML = '';
-            const categories = Object.keys(cloudData.productTemplate).sort();
-            const existingCartNames = cloudData.cartData.map(item => item.name);
-
-            if (categories.length === 0) {
-                productListContainer.innerHTML = '<p style="text-align: center; color: #8e8e93; padding: 30px;">请先在“管理采购模板”中添加项目。</p>';
-                return;
-            }
-
-            categories.forEach(category => {
-                const categoryDiv = document.createElement('div');
-                categoryDiv.className = 'category-container';
-                categoryDiv.innerHTML = `<div class="category-header">${category} <span>(${cloudData.productTemplate[category].length} 项)</span></div><div class="product-group"></div>`;
-                const productGroup = categoryDiv.querySelector('.product-group');
-                
-                cloudData.productTemplate[category].forEach(productName => {
-                    // 只有购物车中没有的项目才能被选中
-                    const isDisabled = existingCartNames.includes(productName);
-                    
-                    const productItem = document.createElement('div');
-                    productItem.className = 'product-item';
-                    productItem.innerHTML = `
-                        <label>
-                            <input type="checkbox" data-name="${productName}" ${isDisabled ? 'disabled' : ''}>
-                            <span class="${isDisabled ? 'disabled-text' : ''}">${productName}</span>
-                        </label>
-                        <input type="number" min="1" data-name="${productName}" class="product-quantity" placeholder="数量" style="width: 60px; text-align: right;">
-                    `;
-                    productGroup.appendChild(productItem);
-                });
-                productListContainer.appendChild(categoryDiv);
-            });
-        }
-
-        async function addSelectedToCart() {
-            const selectedItems = [];
-            document.querySelectorAll('#product-list-container input[type="checkbox"]:checked').forEach(checkbox => {
-                const name = checkbox.getAttribute('data-name');
-                const quantityInput = document.querySelector(`.product-quantity[data-name="${name}"]`);
-                let quantity = parseInt(quantityInput.value, 10);
-                
-                if (isNaN(quantity) || quantity <= 0) {
-                    quantity = 1; // 默认数量为 1
-                }
-                
-                selectedItems.push({
-                    name: name,
-                    price: 0,
-                    quantity: quantity,
-                    purchased: false
-                });
-            });
-
-            if (selectedItems.length === 0) {
-                alert('请选择要添加到采购清单的项目。');
-                return;
-            }
-
-            cloudData.cartData = cloudData.cartData.concat(selectedItems);
-            
-            const saved = await saveProductsToCloud();
-            if (saved) {
-                alert(`${selectedItems.length} 个项目已添加到采购清单!`);
                 renderProductList();
-                // 自动切换到购物车
-                openTab(null, 'cart'); 
-            }
-        }
-        
-        // --- 采购清单/购物车 (Tab 2) ---
-        function renderCart() {
-            cartTableBody.innerHTML = '';
-            let grandTotalCost = 0;
-
-            if (cloudData.cartData.length === 0) {
-                cartTableBody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #8e8e93;">采购清单为空。</td></tr>';
-                document.getElementById('cart-total-display').textContent = `总计: 0${CURRENCY_SUFFIX}`;
-                return;
-            }
-
-            cloudData.cartData.forEach((item, index) => {
-                const row = cartTableBody.insertRow();
-                row.className = item.purchased ? 'purchased-row' : '';
-                
-                // Item Name (Cell 1)
-                const nameCell = row.insertCell();
-                nameCell.className = `cart-item-name ${item.purchased ? 'purchased' : ''}`;
-                nameCell.textContent = item.name;
-                nameCell.onclick = () => clearPrice(index); // 点击清空价格/标记未购买
-                
-                // Quantity (Cell 2)
-                const quantityCell = row.insertCell();
-                quantityCell.style.textAlign = 'right';
-                quantityCell.textContent = `x ${item.quantity}`;
-                
-                // Price Input (Cell 3)
-                const priceCell = row.insertCell();
-                priceCell.style.textAlign = 'right';
-                const priceInput = document.createElement('input');
-                priceInput.type = 'number';
-                priceInput.min = '0';
-                priceInput.value = item.price || '';
-                priceInput.className = 'cart-item-price-input';
-                priceInput.onchange = (e) => updateCartItem(index, parseInt(e.target.value, 10));
-                priceCell.appendChild(priceInput);
-
-                // Checkbox to mark as purchased
-                const purchasedCheckbox = document.createElement('input');
-                purchasedCheckbox.type = 'checkbox';
-                purchasedCheckbox.checked = item.purchased;
-                purchasedCheckbox.onchange = (e) => updatePurchasedStatus(index, e.target.checked);
-                
-                const checkboxLabel = document.createElement('label');
-                checkboxLabel.style.display = 'flex';
-                checkboxLabel.style.alignItems = 'center';
-                checkboxLabel.style.justifyContent = 'flex-start';
-                checkboxLabel.style.gap = '8px';
-                checkboxLabel.appendChild(purchasedCheckbox);
-                checkboxLabel.appendChild(document.createTextNode('已购'));
-                
-                // 将复选框添加到 nameCell 前，确保交互不变但显示优化
-                nameCell.style.display = 'flex';
-                nameCell.style.alignItems = 'center';
-                nameCell.style.gap = '10px';
-                nameCell.insertBefore(purchasedCheckbox, nameCell.firstChild);
-
-                // 计算总价
-                if (item.purchased && item.price > 0) {
-                    grandTotalCost += item.price * item.quantity;
-                }
-            });
-
-            document.getElementById('cart-total-display').textContent = `总计: ${grandTotalCost.toLocaleString()}${CURRENCY_SUFFIX}`;
-        }
-
-        async function updateCartItem(index, price) {
-            if (isNaN(price)) price = 0;
-            cloudData.cartData[index].price = price;
-            
-            // 如果价格大于 0，则自动标记为已购买
-            if (price > 0) {
-                cloudData.cartData[index].purchased = true;
-            } else {
-                cloudData.cartData[index].purchased = false;
-            }
-            
-            await saveProductsToCloud();
-            renderCart();
-        }
-        
-        async function updatePurchasedStatus(index, purchased) {
-            cloudData.cartData[index].purchased = purchased;
-            
-            // 如果取消勾选，则清空价格
-            if (!purchased) {
-                 cloudData.cartData[index].price = 0;
-            }
-            
-            await saveProductsToCloud();
-            renderCart();
-        }
-
-        async function clearPrice(index) {
-            const item = cloudData.cartData[index];
-            if (item.price > 0 || item.purchased) {
-                if (confirm(`确定要清空 ${item.name} 的价格并标记为未购买吗？`)) {
-                    item.price = 0;
-                    item.purchased = false;
-                    await saveProductsToCloud();
-                    renderCart();
-                }
-            }
-        }
-
-        async function copyCartSummary() {
-            const today = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
-            let summaryText = `🛒 采购清单 - ${today}\n\n`;
-            let grandTotalCost = 0;
-
-            cloudData.cartData.forEach(item => {
-                if (item.purchased && item.price > 0) {
-                    summaryText += `✅ ${item.name}: ${item.quantity} x ${item.price.toLocaleString()} = ${(item.price * item.quantity).toLocaleString()}${CURRENCY_SUFFIX}\n`;
-                    grandTotalCost += item.price * item.quantity;
-                } else {
-                    summaryText += `◻️ ${item.name} (数量: ${item.quantity})\n`;
-                }
-            });
-
-            summaryText += `\n--- 总计: ${grandTotalCost.toLocaleString()}${CURRENCY_SUFFIX}`;
-            
-            try {
-                if (navigator.clipboard) {
-                    await navigator.clipboard.writeText(summaryText);
-                    alert("🛒 采购清单 (含日期) 已成功复制到剪贴板！");
-                } else {
-                    const textarea = document.createElement('textarea');
-                    textarea.value = summaryText;
-                    document.body.appendChild(textarea);
-                    textarea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textarea);
-                    alert("🛒 采购清单 (含日期) 已成功复制到剪贴板！");
-                }
-            } catch (err) {
-                console.error('无法复制内容:', err);
-                alert('复制失败，请手动复制以下内容:\n\n' + summaryText);
-            }
-        }
-
-        async function resetCart() {
-            const cartItems = cloudData.cartData;
-            const purchasedItems = cartItems.filter(item => item.purchased && item.price > 0);
-
-            if (purchasedItems.length === 0) {
-                alert("没有已完成 (已勾选且已填写价格) 的项目可以清空。");
-                return;
-            }
-
-            if (confirm(`确定要清空 ${purchasedItems.length} 个已完成的项目吗？`)) {
-                cloudData.cartData = cartItems.filter(item => !(item.purchased && item.price > 0));
-                
-                const saved = await saveProductsToCloud();
-                
-                if (saved) {
-                    renderCart();
-                    alert("已完成的项目已清空。");
-                }
-            }
-        }
-
-        // --- Tab 切换和初始化 ---
-        function openTab(evt, tabName) {
-            let i, tabcontent, tablinks;
-            tabcontent = document.getElementsByClassName("tab-content");
-            for (i = 0; i < tabcontent.length; i++) {
-                tabcontent[i].style.display = "none";
-                tabcontent[i].classList.remove('active');
-            }
-
-            tablinks = document.getElementsByClassName("tab-button");
-            for (i = 0; i < tablinks.length; i++) {
-                tablinks[i].classList.remove("active");
-            }
-            
-            document.getElementById(tabName).style.display = "block";
-            document.getElementById(tabName).classList.add('active');
-            if (evt) evt.currentTarget.classList.add("active");
-
-            // 每次切换时重新渲染对应内容
-            if (tabName === 'product-list') {
-                renderProductList();
-            } else if (tabName === 'cart') {
                 renderCart();
-            } else if (tabName === 'product-template') {
-                renderProductTemplate();
             }
+        }
+    }
+    
+    async function deleteProduct(category, name) {
+        if (confirm(`确定要从清单中删除采购项 "${name}" 吗？此操作将无法撤销。`)) {
+            const list = cloudData.productTemplate[category];
+            const oldIndex = list.indexOf(name);
             
-            sessionStorage.setItem('activeTab', tabName); 
+            if (oldIndex !== -1) {
+                list.splice(oldIndex, 1);
+                
+                cloudData.cartData = cloudData.cartData.filter(item => item.name !== name);
+                
+                await saveProductsToCloud();
+                
+                renderProductList();
+                renderCart();
+            }
+        }
+    }
+
+    async function addSelectedToCart() {
+        const checkboxes = document.querySelectorAll('#product-list input[type="checkbox"]');
+        let selectedCount = 0;
+        
+        const existingCartMap = new Map();
+        for (const item of cloudData.cartData) {
+            existingCartMap.set(item.name, { purchased: item.purchased, price: item.price });
+        }
+        
+        const newCartItems = [];
+        const selectedItemNames = new Set();
+        
+        for (const checkbox of checkboxes) {
+            const itemName = checkbox.getAttribute('data-item-name');
+            const existingItem = existingCartMap.get(itemName);
+
+            if (checkbox.checked) {
+                newCartItems.push({
+                    name: itemName,
+                    purchased: existingItem ? existingItem.purchased : false,
+                    price: existingItem ? existingItem.price : ''
+                });
+                selectedItemNames.add(itemName);
+                selectedCount++;
+                
+                // 核心：立即取消 DOM 上的勾选状态
+                checkbox.checked = false;
+            }
+        }
+        
+        // 确保未在当前操作中被选中的旧购物车项目也保留
+        for (const item of cloudData.cartData) {
+            if (!selectedItemNames.has(item.name)) {
+                 newCartItems.push(item);
+            }
         }
 
-        // --- 页面跳转 (FIXED: 确保使用正确的文件名 `index .html` - 修复点！) ---
-        function goToOrderingPage() {
-            window.location.href = 'index .html'; 
+        cloudData.cartData = newCartItems; 
+        
+        if (selectedCount === 0) {
+            alert("请先勾选您要采购的商品！");
+            return;
+        }
+        
+        await saveProductsToCloud(); 
+        
+        renderCart();
+        
+        openTab(null, 'cart-tab');
+        alert(`成功添加 ${selectedCount} 件商品到购物车，请在结算页记录价格！`);
+    }
+
+    async function addNewProductToList() {
+        const itemName = DOM.newProductInput.value.trim();
+        const selectedCategoryKey = DOM.newProductCategory.value;
+
+        if (itemName === "") {
+            alert("请输入采购项名称。");
+            return;
+        }
+        
+        for (const category in cloudData.productTemplate) {
+            if (cloudData.productTemplate[category].includes(itemName)) {
+                 alert(`"${itemName}" 已经在清单中！`);
+                 DOM.newProductInput.value = ''; 
+                 DOM.newProductInput.focus();
+                 return;
+            }
         }
 
-        // --- 初始化和加载 ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            await loadCloudData();
-            
-            if (!cloudData.productTemplate) cloudData.productTemplate = {};
-            if (!cloudData.cartData) cloudData.cartData = [];
+        const smartCategoryKey = getCategoryByKeyword(itemName);
+        const targetCategoryKey = smartCategoryKey || selectedCategoryKey;
+        
+        // 如果目标分类不存在
+        if (!cloudData.productTemplate[targetCategoryKey]) {
+            cloudData.productTemplate[targetCategoryKey] = [];
+        }
+        
+        cloudData.productTemplate[targetCategoryKey].push(itemName);
+         
+        sortCategory(targetCategoryKey); 
+         
+        await saveProductsToCloud();
+         
+        renderProductList(); 
+         
+        // 自动勾选新添加的项
+        const newCheckbox = document.querySelector(`input[data-item-name="${itemName}"]`);
+        if (newCheckbox) {
+            newCheckbox.checked = true;
+        }
+        
+        populateCategorySelect(); // 更新分类下拉框
+        
+        alert("新项目已添加到清单并勾选，请点击 '加入购物车并前往结算' 完成添加。");
+             
+        DOM.newProductInput.value = ''; 
+        DOM.newProductInput.focus();
+    }
 
-            renderCategorySelect();
-            
-            document.getElementById('loading-overlay').style.display = 'none';
 
-            const savedTab = sessionStorage.getItem('activeTab') || 'product-list';
-            const initialButton = document.querySelector(`.tab-button[onclick*="'${savedTab}'"]`);
-            
-            if (initialButton) {
-                // 模拟点击初始按钮以触发 openTab
-                openTab({ currentTarget: initialButton }, savedTab);
+    // --- 2. 购物车逻辑 (结算和价格记录) ---
+    
+    function renderCart() {
+        let tableHtml = '';
+        
+        const cartItems = cloudData.cartData; 
+
+        if (cartItems.length === 0) {
+            tableHtml = `<tr><td colspan="3" style="text-align: center; padding: 20px; color:#8e8e93;">购物车是空的，请在选品清单中勾选！</td></tr>`;
+        } else {
+            for (let index = 0; index < cartItems.length; index++) {
+                const item = cartItems[index];
+                const purchasedClass = item.purchased ? 'purchased' : '';
+                const checkedAttr = item.purchased ? 'checked' : '';
+                
+                // 渲染时，显示格式化后的价格
+                const displayValue = formatPrice(item.price);
+                
+                tableHtml += `
+                    <tr class="cart-item-row ${purchasedClass}">
+                        <td>
+                            <input type="checkbox" ${checkedAttr} onchange="togglePurchased(${index})">
+                        </td>
+                        <td><span class="item-name">${item.name}</span></td>
+                        <td style="text-align: right;">
+                            <input type="number" 
+                                class="price-input" 
+                                value="${item.price || ''}" 
+                                placeholder="0" 
+                                inputmode="numeric" 
+                                pattern="[0-9]*"
+                                onchange="updateItemPrice(${index}, this.value, this)">
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        DOM.cartTableBody.innerHTML = tableHtml;
+        calculateTotalCost();
+    }
+    
+    // *** 核心修复 V8：采用 onchange 事件处理价格更新 ***
+    async function updateItemPrice(index, rawValueString, inputElement) {
+        // 1. 解析输入值
+        const rawValue = parseFormattedPrice(rawValueString);
+        const cartItems = cloudData.cartData;
+
+        // 2. 确定状态
+        const isPurchased = (rawValue !== '' && rawValue > 0);
+        
+        // 3. 更新底层数据
+        cartItems[index].price = rawValue; 
+        cartItems[index].purchased = isPurchased;
+        
+        // 4. 更新行样式和复选框状态
+        const row = inputElement.closest('.cart-item-row');
+        if (row) {
+            row.classList.toggle('purchased', isPurchased);
+            row.querySelector('input[type="checkbox"]').checked = isPurchased;
+        }
+
+        calculateTotalCost(); 
+        await saveProductsToCloud();
+    }
+
+    async function togglePurchased(index) {
+        const cartItems = cloudData.cartData;
+        const currentCheckbox = event.target; 
+        const isChecked = currentCheckbox.checked;
+        const row = currentCheckbox.closest('.cart-item-row');
+        const priceInput = row.querySelector('.price-input');
+        
+        cartItems[index].purchased = isChecked;
+
+        if (!isChecked) {
+            // 如果取消勾选，清除价格和输入框显示
+            cartItems[index].price = '';
+            priceInput.value = ''; // 清除纯数字输入框
+        }
+        
+        calculateTotalCost(); 
+        
+        row.classList.toggle('purchased', isChecked);
+        
+        await saveProductsToCloud(); 
+    }
+
+    function calculateTotalCost() {
+        let total = 0;
+        const cartItems = cloudData.cartData;
+        
+        for (let i = 0; i < cartItems.length; i++) {
+            const item = cartItems[i];
+            const price = parseFloat(item.price);
+            if (item.purchased && !isNaN(price) && price > 0) {
+                 total += price;
+            }
+        }
+        
+        grandTotalCost = total; 
+        DOM.cartTotalDisplay.textContent = `总支出: ${formatter.format(grandTotalCost)}${CURRENCY_SUFFIX}`;
+    }
+    
+    async function copyCartSummary() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const todayDate = `${year}-${month}-${day}`;
+
+        let summaryText = `📅 ${todayDate} 采购总结:\n\n`; 
+        let hasPurchasedItems = false;
+        const cartItems = cloudData.cartData;
+        
+        for (let i = 0; i < cartItems.length; i++) {
+            const item = cartItems[i];
+            const price = parseFormattedPrice(item.price);
+            if (item.purchased && price !== '' && price > 0) {
+                hasPurchasedItems = true;
+                const formattedPrice = formatPrice(price);
+                summaryText += `${item.name}: ${formattedPrice}\n`;
+            }
+        }
+        
+        if (!hasPurchasedItems) {
+            alert("请先在清单中勾选已采购项目并填写价格！");
+            return;
+        }
+
+        summaryText += "\n------------------\n";
+        summaryText += `💰 总支出: ${formatter.format(grandTotalCost)}${CURRENCY_SUFFIX}`;
+        
+        try {
+            if (navigator.clipboard) {
+                await navigator.clipboard.writeText(summaryText);
+                alert("🛒 采购清单 (含日期) 已成功复制到剪贴板！");
             } else {
-                // 默认打开第一个 Tab
-                openTab(null, 'product-list'); 
+                const textarea = document.createElement('textarea');
+                textarea.value = summaryText;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert("🛒 采购清单 (含日期) 已成功复制到剪贴板！");
             }
-        });
-    </script>
+        } catch (err) {
+            console.error('无法复制内容:', err);
+            alert('复制失败，请手动复制以下内容:\n\n' + summaryText);
+        }
+    }
+
+    async function resetCart() {
+        const cartItems = cloudData.cartData;
+        const purchasedItems = cartItems.filter(item => item.purchased);
+
+        if (purchasedItems.length === 0) {
+            alert("没有已完成 (已勾选且已填写价格) 的项目可以清空。");
+            return;
+        }
+
+        if (confirm(`确定要清空 ${purchasedItems.length} 个已完成的项目吗？`)) {
+            cloudData.cartData = cartItems.filter(item => !item.purchased);
+            
+            await saveProductsToCloud(); 
+            
+            renderCart();
+            
+            openTab(null, 'product-tab');
+            renderProductList(); 
+
+            alert(`已成功清空 ${purchasedItems.length} 个已完成的项目！`);
+        }
+    }
+</script>
 </body>
 </html>
