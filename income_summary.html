@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>收入汇总</title>
+    <style>
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f7f7f7;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #fff;
+            min-height: 100vh;
+            padding-bottom: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- 顶部栏 --- */
+        .header-bar {
+            background-color: #4CAF50; /* 绿色 */
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+
+        .header-button {
+            background: #e6523f;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* --- 汇总面板 --- */
+        .summary-panel {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px 0;
+            background-color: #e8f5e9; 
+            border-bottom: 2px solid #4CAF50;
+        }
+
+        .summary-card {
+            text-align: center;
+            flex: 1;
+            padding: 10px 5px;
+            border-right: 1px solid #ddd;
+        }
+        
+        .summary-card:last-child {
+            border-right: none;
+        }
+
+        .summary-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #388e3c; 
+            margin-bottom: 5px;
+        }
+        
+        .summary-value.red {
+            color: #d85050; 
+        }
+
+        .summary-label {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        /* --- 订单列表 --- */
+        .order-list-section {
+            padding: 20px;
+        }
+
+        .section-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 5px;
+        }
+
+        /* --- 通用订单项样式 (用于待结算和已结算) --- */
+        .order-item-card {
+            border-radius: 5px;
+            margin-bottom: 15px;
+            padding: 10px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .order-header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #fcc;
+            padding-bottom: 5px;
+            margin-bottom: 5px;
+        }
+        
+        .order-table {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #d85050;
+        }
+
+        .order-total {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #d85050;
+        }
+
+        .order-details {
+            font-size: 0.9em;
+            color: #555;
+            padding: 5px 0;
+        }
+        
+        .detail-line {
+            display: flex;
+            justify-content: space-between;
+            line-height: 1.5;
+            border-bottom: 1px dotted #eee;
+        }
+        
+        .detail-line:last-child {
+            border-bottom: none;
+        }
+        
+        .clear-income-btn {
+            display: block;
+            width: 90%;
+            margin: 30px auto 10px;
+            padding: 12px;
+            background-color: #ff5722; 
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .no-pending {
+            text-align: center;
+            color: #999;
+            padding: 30px 0;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-bar">
+            <span>💰 财务汇总</span>
+            <button class="header-button" onclick="goToOrderingPage()">返回点单</button>
+        </div>
+
+        <div class="summary-panel">
+            <div class="summary-card">
+                <div class="summary-value" id="totalIncome">0</div>
+                <div class="summary-label">累计总收入 (Ks)</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value" id="closedOrdersCount">0</div>
+                <div class="summary-label">已结算订单数</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-value red" id="pendingOrdersCount">0</div>
+                <div class="summary-label">未结算桌数</div>
+            </div>
+        </div>
+
+        <div class="order-list-section">
+            <div class="section-title">
+                🔴 待结算桌号 (当前订单详情)
+            </div>
+            <div id="pendingOrdersList">
+                <div class="no-pending">当前没有正在进行中的订单。</div>
+            </div>
+        </div>
+        
+        <div class="closed-orders-section">
+            <div class="section-title">
+                🟢 已结算记录 (按最新排序)
+            </div>
+            <div id="closedOrdersList">
+                <div class="no-pending">暂无已结算记录。</div>
+            </div>
+            <button class="clear-income-btn" onclick="clearAllIncome()">清空所有收入记录</button>
+        </div>
+
+    </div>
+
+<script>
+    const ORDERS_STORAGE_KEY = 'grill_table_orders';
+    const INCOME_STORAGE_KEY = 'grill_income_data';
+
+    // --- 实用函数 ---
+    function loadTableOrders() {
+        const storedOrders = localStorage.getItem(ORDERS_STORAGE_KEY);
+        if (storedOrders) {
+            try {
+                const obj = JSON.parse(storedOrders);
+                return new Map(Object.entries(obj));
+            } catch (e) {
+                console.error("Failed to parse table orders:", e);
+            }
+        }
+        return new Map();
+    }
+    
+    function loadIncomeData() {
+        const storedData = localStorage.getItem(INCOME_STORAGE_KEY);
+        if (storedData) {
+            try {
+                return JSON.parse(storedData);
+            } catch (e) {
+                console.error("Failed to parse income data:", e);
+            }
+        }
+        return { total: 0, closedOrders: [] };
+    }
+
+    function calculateOrderTotal(order) {
+        return order.reduce((total, item) => total + (item.price * item.quantity), 0);
+    }
+    
+    function calculateOrderSummary(order) {
+        const activeItems = order.filter(item => item.quantity > 0);
+        const total = calculateOrderTotal(order);
+        
+        const details = activeItems.map(item => ({
+             name: item.name,
+             quantity: item.quantity,
+             price: item.price
+        }));
+        
+        return { total, details };
+    }
+
+    /**
+     * 创建订单详情的HTML结构
+     * @param {object} record - 包含 table, amount, time, items 的订单记录
+     * @param {boolean} isClosed - 是否为已结算订单
+     */
+    function createDetailedOrderHTML(record, isClosed) {
+        let detailsHTML = '';
+        if (record.items && record.items.length > 0) {
+            record.items.forEach(item => {
+                const subtotal = (item.price * item.quantity).toLocaleString();
+                detailsHTML += `
+                    <div class="detail-line">
+                        <span>${item.name} x ${item.quantity}</span>
+                        <span style="font-weight: bold;">${subtotal} Ks</span>
+                    </div>
+                `;
+            });
+        } else {
+             detailsHTML = '<div style="color:#aaa; text-align:center;">(无详细菜品记录)</div>';
+        }
+        
+        return `
+            <div class="order-item-card" style="background-color: ${isClosed ? '#f8fdf8' : '#fff4f4'}; border: 1px solid ${isClosed ? '#d4edda' : '#f5c6cb'};">
+                <div class="order-header-info">
+                    <span class="order-table">${isClosed ? '结算时间' : '桌号'}：${isClosed ? record.time : record.table + '号桌'}</span>
+                    <span class="order-total">${record.amount.toLocaleString()} Ks</span>
+                </div>
+                <div class="order-details">
+                   ${detailsHTML}
+                </div>
+            </div>
+        `;
+    }
+
+    // --- 渲染逻辑 ---
+    function renderSummary() {
+        const incomeData = loadIncomeData();
+        const tableOrdersMap = loadTableOrders();
+        
+        let pendingOrdersListHTML = '';
+        let pendingTableCount = 0;
+
+        // --- 渲染待结算列表 (读取 ORDERS_STORAGE_KEY) ---
+        tableOrdersMap.forEach((order, tableNumber) => {
+            const summary = calculateOrderSummary(order);
+            if (summary.total > 0) {
+                pendingTableCount++;
+                const record = { 
+                    table: tableNumber, 
+                    items: summary.details, 
+                    amount: summary.total 
+                };
+                pendingOrdersListHTML += createDetailedOrderHTML(record, false);
+            }
+        });
+        
+        const pendingOrdersListContainer = document.getElementById('pendingOrdersList');
+        if (pendingTableCount > 0) {
+            pendingOrdersListContainer.innerHTML = pendingOrdersListHTML;
+        } else {
+            pendingOrdersListContainer.innerHTML = '<div class="no-pending">当前没有正在进行中的订单。</div>';
+        }
+
+
+        // --- 渲染已结算列表 (读取 INCOME_STORAGE_KEY) ---
+        let closedOrdersListHTML = '';
+        const closedOrdersListContainer = document.getElementById('closedOrdersList');
+        
+        if (incomeData.closedOrders.length > 0) {
+            // 按时间倒序显示 (最新在最上)
+            const reversedOrders = [...incomeData.closedOrders].reverse(); 
+            reversedOrders.forEach(record => {
+                closedOrdersListHTML += createDetailedOrderHTML(record, true);
+            });
+            closedOrdersListContainer.innerHTML = closedOrdersListHTML;
+        } else {
+            closedOrdersListContainer.innerHTML = '<div class="no-pending">暂无已结算记录。</div>';
+        }
+
+        // --- 渲染汇总面板 ---
+        document.getElementById('totalIncome').textContent = incomeData.total.toLocaleString();
+        document.getElementById('closedOrdersCount').textContent = incomeData.closedOrders.length;
+        document.getElementById('pendingOrdersCount').textContent = pendingTableCount;
+    }
+
+    function clearAllIncome() {
+        if (confirm("警告！您确定要清空所有的收入记录吗？此操作不可撤销，且不会影响当前未结算的订单。")) {
+            localStorage.setItem(INCOME_STORAGE_KEY, '{"total": 0, "closedOrders": []}');
+            renderSummary();
+            alert("所有收入记录已清空。");
+        }
+    }
+    
+    function goToOrderingPage() {
+        // ************ 修复区域 START ************
+        window.location.href = 'index.html'; // 链接到带空格的主文件
+        // ************ 修复区域 END ************
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderSummary();
+    });
+</script>
+
+</body>
+</html>
