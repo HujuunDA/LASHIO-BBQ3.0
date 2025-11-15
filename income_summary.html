@@ -248,7 +248,8 @@
      */
     function getTodayMidnightTimestamp() {
         const now = new Date();
-        now.setHours(0, 0, 0, 0); // 设置到今天午夜
+        // 设置到今天午夜
+        now.setHours(0, 0, 0, 0); 
         return now.getTime();
     }
     
@@ -265,7 +266,8 @@
             });
             
             if (!response.ok) {
-                throw new Error(`Cloud fetch failed: ${response.statusText}`);
+                // 如果 HTTP 状态码不是 200 OK，抛出错误
+                throw new Error(`云端加载失败: ${response.status} ${response.statusText}`);
             }
             
             const data = await response.json();
@@ -295,16 +297,19 @@
                 console.warn("云端数据结构不完整或为空，使用默认结构。", data);
             }
             
-            renderSummary(); // 加载成功后渲染页面 (现在不需要 view 参数)
+            renderSummary(); // 加载成功后渲染页面
         } catch (error) {
-            console.error("加载云端数据失败，使用本地默认数据。", error);
+            console.error("加载云端数据失败。", error);
+            // 重点修改：如果加载失败，弹窗提醒用户检查密钥和ID
+            alert(`云端数据加载失败！请检查以下内容：\n1. 您的 JSONBin ID 和 Master Key 是否正确？\n2. 您的网络连接是否正常？\n错误信息: ${error.message}`);
+
             const loadingOverlay = document.getElementById('loading-overlay');
-            loadingOverlay.textContent = '❌ 数据加载失败！请检查网络。';
+            loadingOverlay.textContent = '❌ 数据加载失败！请检查配置或网络。';
             loadingOverlay.style.backgroundColor = 'rgba(255, 230, 230, 0.9)';
             loadingOverlay.style.color = '#FF4500';
             setTimeout(() => {
                 loadingOverlay.style.display = 'none';
-            }, 3000);
+            }, 5000); // 延长显示时间，让用户看到错误
         } finally {
              document.getElementById('loading-overlay').style.display = 'none';
         }
@@ -334,21 +339,21 @@
             });
 
             if (!response.ok) {
-                throw new Error(`Cloud save failed: ${response.statusText}`);
+                throw new Error(`云端保存失败: ${response.status} ${response.statusText}`);
             }
             
             console.log("数据已成功同步到云端。");
             return true;
         } catch (error) {
             console.error("保存云端数据失败。", error);
-            alert("数据保存失败！请检查 JSONBin 配置或网络。");
+            alert(`数据保存失败！请检查 JSONBin 配置或网络。\n错误信息: ${error.message}`);
             return false;
         } finally {
              document.getElementById('loading-overlay').style.display = 'none';
         }
     }
 
-    // --- 实用函数 ---
+    // --- 实用函数 (保持不变) ---
     function calculateOrderTotal(orderItems) {
         return orderItems.reduce((total, item) => total + (item.price * item.quantity), 0);
     }
@@ -425,7 +430,7 @@
         `;
     }
 
-    // --- 渲染逻辑 (现在固定为当日统计) ---
+    // --- 渲染逻辑 (固定为当日统计) ---
     function renderSummary() {
         const incomeData = globalCloudData.income_data;
         const midnight = getTodayMidnightTimestamp();
@@ -457,6 +462,7 @@
 
 
         // 2. 筛选今日已结算记录
+        // 关键：筛选出 timestamp >= 今天午夜的记录
         const filteredClosedOrders = incomeData.closedOrders.filter(order => order.timestamp >= midnight);
         // 计算当日总收入
         const totalDailyIncome = filteredClosedOrders.reduce((sum, order) => sum + order.total, 0);
@@ -470,7 +476,7 @@
             const reversedOrders = [...filteredClosedOrders].reverse(); 
             
             reversedOrders.forEach(filteredRecord => {
-                // 找到 filteredRecord 在原始 closedOrders 数组中的索引 (用于删除)
+                // 关键：找到 filteredRecord 在【原始】closedOrders 数组中的索引 (用于删除)
                 const originalIndex = incomeData.closedOrders.findIndex(originalRecord => 
                     originalRecord.timestamp === filteredRecord.timestamp && 
                     originalRecord.total === filteredRecord.total
