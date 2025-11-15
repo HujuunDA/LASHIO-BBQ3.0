@@ -42,6 +42,33 @@
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
+            margin-left: 10px;
+        }
+
+        /* --- 切换按钮 --- */
+        .switch-bar {
+            display: flex;
+            justify-content: center;
+            padding: 10px 20px 0;
+            background-color: #fff;
+            border-bottom: 1px solid #ddd;
+        }
+        .switch-btn {
+            flex: 1;
+            padding: 10px;
+            margin: 0 5px;
+            background-color: #eee;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            font-weight: bold;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.2s;
+        }
+        .switch-btn.active {
+            background-color: #FF8C00;
+            color: white;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         /* --- 汇总面板 --- */
@@ -100,6 +127,7 @@
             margin-bottom: 15px;
             padding: 10px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            position: relative; /* 为删除按钮定位 */
         }
 
         .order-header-info {
@@ -163,6 +191,21 @@
         
         /* 新增加载层样式 */
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); color: #FF8C00; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; z-index: 1000; transition: opacity 0.3s; }
+
+        /* 新增: 删除按钮样式 */
+        .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #e6523f;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 3px 6px;
+            font-size: 0.7em;
+            cursor: pointer;
+            opacity: 0.8;
+        }
     </style>
 </head>
 <body>
@@ -173,19 +216,25 @@
             <span>💰 财务汇总</span>
             <button class="header-button" onclick="goToOrderingPage()">返回点单</button>
         </div>
+        
+        <div class="switch-bar">
+            <button class="switch-btn active" id="daily-btn" onclick="toggleView('daily')">当日统计</button>
+            <button class="switch-btn" id="total-btn" onclick="toggleView('total')">累计总统计</button>
+        </div>
+
 
         <div class="summary-panel">
             <div class="summary-card">
                 <div class="summary-value" id="totalIncome">0</div>
-                <div class="summary-label">累计总收入 (Ks)</div>
+                <div class="summary-label" id="income-label">当日总收入 (Ks)</div>
             </div>
             <div class="summary-card">
                 <div class="summary-value" id="closedOrdersCount">0</div>
-                <div class="summary-label">已结算订单数</div>
+                <div class="summary-label" id="closed-label">当日已结算订单数</div>
             </div>
             <div class="summary-card">
                 <div class="summary-value red" id="pendingOrdersCount">0</div>
-                <div class="summary-label">未结算桌数</div>
+                <div class="summary-label" id="pending-label">未结算桌数</div>
             </div>
         </div>
 
@@ -205,14 +254,13 @@
             <div id="closedOrdersList">
                 <div class="no-pending">暂无已结算记录。</div>
             </div>
-            <button class="clear-income-btn" onclick="clearAllIncome()">清空所有收入记录</button>
+            <button class="clear-income-btn" onclick="clearAllIncome()">清空所有收入记录 (累计)</button>
         </div>
 
     </div>
 
 <script>
     // --- Cloud Sync Configuration (与 index.html 保持一致) ---
-    // 这是你的云端存储ID和密钥，确保和你的 index.html 中的值是完全一样的
     const JSONBIN_ID = '69174442ae596e708f5901ae'; 
     const JSONBIN_MASTER_KEY = '$2a$10$ol9N5tLV0G2AnDYaF4sO4O2l0RoR8OSXagA4IUy2wiwdntZDuzRh2';
     const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
@@ -224,10 +272,28 @@
         purchase_data: { productTemplate: {}, cartData: [] }
     };
     
-    // 用于存储 table_orders 的 Map 结构
     let tableOrders = new Map(); 
+    let currentView = 'daily'; // 新增：默认显示当日统计
 
-    // --- Cloud Utilities (核心：从云端加载数据) ---
+    // --- 日期工具函数 ---
+    /**
+     * 获取今天日期（YYYY-MM-DD）的午夜时间戳
+     */
+    function getTodayMidnightTimestamp() {
+        const now = new Date();
+        now.setHours(0, 0, 0, 0); // 设置到今天午夜
+        return now.getTime();
+    }
+    
+    /**
+     * 检查一个时间戳是否是今天
+     */
+    function isToday(timestamp) {
+        return timestamp >= getTodayMidnightTimestamp();
+    }
+
+
+    // --- Cloud Utilities ---
     async function loadCloudData() {
         document.getElementById('loading-overlay').style.display = 'flex';
         try {
@@ -260,21 +326,19 @@
                     if (Array.isArray(orderData)) {
                          tableOrders.set(tableNum, { items: orderData, notes: '' });
                     } else {
-                        // 确保 items 和 notes 存在
                         if (!orderData.items) orderData.items = [];
                         if (typeof orderData.notes !== 'string') orderData.notes = '';
                         tableOrders.set(tableNum, orderData);
                     }
                 }
-                console.log("数据从云端加载成功。", globalCloudData);
+                console.log("数据从云端加载成功。");
             } else {
                 console.warn("云端数据结构不完整或为空，使用默认结构。", data);
             }
             
-            renderSummary(); // 加载成功后渲染页面
+            renderSummary(currentView); // 加载成功后渲染页面
         } catch (error) {
             console.error("加载云端数据失败，使用本地默认数据。", error);
-            // 提醒用户加载失败，但不使用 alert 避免阻塞
             const loadingOverlay = document.getElementById('loading-overlay');
             loadingOverlay.textContent = '❌ 数据加载失败！请检查网络。';
             loadingOverlay.style.backgroundColor = 'rgba(255, 230, 230, 0.9)';
@@ -287,12 +351,13 @@
         }
     }
     
-    // --- Cloud Utilities (用于清空收入时同步到云端) ---
     async function saveCloudData() {
+        document.getElementById('loading-overlay').textContent = '正在同步到云端...';
+        document.getElementById('loading-overlay').style.display = 'flex';
+
         // 确保 tableOrders 转换回 Object 以便保存
         const storableTableOrders = {};
         for (const [tableNum, data] of tableOrders.entries()) {
-            // 只保存有订单项或有备注的桌号
             if (data.items.length > 0 || data.notes) {
                 storableTableOrders[tableNum] = data;
             }
@@ -301,7 +366,7 @@
         
         try {
             const response = await fetch(JSONBIN_URL, {
-                method: 'PUT', // 使用 PUT 更新整个 Bin
+                method: 'PUT',
                 headers: {
                     'X-Master-Key': JSONBIN_MASTER_KEY,
                     'Content-Type': 'application/json'
@@ -313,26 +378,23 @@
                 throw new Error(`Cloud save failed: ${response.statusText}`);
             }
             
-            const result = await response.json();
-            console.log("数据已成功同步到云端。", result);
+            console.log("数据已成功同步到云端。");
             return true;
         } catch (error) {
             console.error("保存云端数据失败。", error);
             alert("数据保存失败！请检查 JSONBin 配置或网络。");
             return false;
+        } finally {
+             document.getElementById('loading-overlay').style.display = 'none';
         }
     }
 
     // --- 实用函数 ---
-    // (已移除所有本地存储相关的代码，确保只使用云端数据)
-
     function calculateOrderTotal(orderItems) {
-        // orderItems 是 { items: [], notes: '' } 结构中的 items 数组
         return orderItems.reduce((total, item) => total + (item.price * item.quantity), 0);
     }
     
     function calculateOrderSummary(orderData) {
-        // orderData 是 { items: [], notes: '' } 结构
         const activeItems = orderData.items.filter(item => item.quantity > 0);
         const total = calculateOrderTotal(activeItems);
         
@@ -347,14 +409,14 @@
 
     /**
      * 创建订单详情的HTML结构
+     * 新增 index 参数用于单条删除定位
      */
-    function createDetailedOrderHTML(record, isClosed) {
+    function createDetailedOrderHTML(record, isClosed, index = null) {
         const itemsToDisplay = isClosed ? record.items : record.details;
         
         let detailsHTML = '';
         if (itemsToDisplay && itemsToDisplay.length > 0) {
             itemsToDisplay.forEach(item => {
-                // 确保 total 是数字，并格式化显示
                 const subtotal = (item.price * item.quantity);
                 detailsHTML += `
                     <div class="detail-line">
@@ -367,9 +429,8 @@
              detailsHTML = '<div style="color:#aaa; text-align:center;">(无详细菜品记录)</div>';
         }
         
-        // 如果有备注，添加备注行
         let notesHTML = '';
-        const notes = isClosed ? record.notes : record.notes; // 统一名称
+        const notes = isClosed ? record.notes : record.notes; 
         if (notes) {
             notesHTML = `<div style="margin-top: 5px; font-style: italic; color: #FF4500;">备注: ${notes}</div>`;
         }
@@ -385,9 +446,15 @@
             headerText = `桌号：${record.table}号桌`;
         }
 
+        // 新增：如果已结算，添加删除按钮
+        let deleteButton = '';
+        if (isClosed && index !== null) {
+            deleteButton = `<button class="delete-btn" onclick="deleteSingleOrder(${index})">删除</button>`;
+        }
         
         return `
             <div class="order-item-card" style="background-color: ${isClosed ? '#f8fdf8' : '#fff4f4'}; border: 1px solid ${isClosed ? '#d4edda' : '#f5c6cb'};">
+                ${deleteButton}
                 <div class="order-header-info">
                     <span class="order-table">${headerText}</span>
                     <span class="order-total">${totalDisplay} Ks</span>
@@ -400,19 +467,17 @@
         `;
     }
 
-    // --- 渲染逻辑 ---
-    function renderSummary() {
-        // 使用 globalCloudData 中的数据
+    // --- 渲染逻辑 (核心修改：增加 view 参数) ---
+    function renderSummary(view) {
         const incomeData = globalCloudData.income_data;
         
+        // 1. 待结算桌号 (不受当日/累计影响，始终显示当前未结算的桌)
         let pendingOrdersListHTML = '';
         let pendingTableCount = 0;
 
-        // --- 渲染待结算列表 (读取 tableOrders Map) ---
         tableOrders.forEach((orderData, tableNumber) => {
             const summary = calculateOrderSummary(orderData);
-            // 只有订单金额大于0或有备注的桌号才算作待结算
-            if (summary.total > 0 || orderData.notes) { 
+            if (summary.total > 0 || orderData.notes) {
                 pendingTableCount++;
                 const record = { 
                     table: tableNumber, 
@@ -432,36 +497,106 @@
         }
 
 
-        // --- 渲染已结算列表 (读取 income_data.closedOrders) ---
+        // 2. 筛选已结算记录 (根据 view 参数)
+        let filteredClosedOrders = incomeData.closedOrders;
+        let totalIncome = incomeData.total;
+        
+        if (view === 'daily') {
+            const midnight = getTodayMidnightTimestamp();
+            filteredClosedOrders = incomeData.closedOrders.filter(order => order.timestamp >= midnight);
+            // 重新计算当日总收入
+            totalIncome = filteredClosedOrders.reduce((sum, order) => sum + order.total, 0);
+        }
+        
+        // 3. 渲染已结算列表
         let closedOrdersListHTML = '';
         const closedOrdersListContainer = document.getElementById('closedOrdersList');
         
-        if (incomeData.closedOrders.length > 0) {
+        if (filteredClosedOrders.length > 0) {
             // 按时间倒序显示 (最新在最上)
-            const reversedOrders = [...incomeData.closedOrders].reverse(); 
-            reversedOrders.forEach(record => {
-                // record 结构: { table, items, notes, total, timestamp }
+            // 注意：这里需要记录原始数组的索引，以便删除时能找到正确的数据
+            const reversedOrders = [...filteredClosedOrders].reverse(); 
+            
+            reversedOrders.forEach(filteredRecord => {
+                // 找到 filteredRecord 在原始 closedOrders 数组中的索引
+                // 这是实现精准删除的关键！
+                const originalIndex = incomeData.closedOrders.findIndex(originalRecord => 
+                    originalRecord.timestamp === filteredRecord.timestamp && 
+                    originalRecord.total === filteredRecord.total
+                );
+                
                 const normalizedRecord = {
-                    table: record.table,
-                    items: record.items, 
-                    notes: record.notes,
-                    total: record.total,
-                    timestamp: record.timestamp
+                    table: filteredRecord.table,
+                    items: filteredRecord.items, 
+                    notes: filteredRecord.notes,
+                    total: filteredRecord.total,
+                    timestamp: filteredRecord.timestamp
                 };
-                closedOrdersListHTML += createDetailedOrderHTML(normalizedRecord, true);
+                // 将原始索引传递给 HTML 结构中的删除按钮
+                closedOrdersListHTML += createDetailedOrderHTML(normalizedRecord, true, originalIndex);
             });
             closedOrdersListContainer.innerHTML = closedOrdersListHTML;
         } else {
             closedOrdersListContainer.innerHTML = '<div class="no-pending">暂无已结算记录。</div>';
         }
 
-        // --- 渲染汇总面板 ---
-        document.getElementById('totalIncome').textContent = incomeData.total.toLocaleString();
-        document.getElementById('closedOrdersCount').textContent = incomeData.closedOrders.length;
-        document.getElementById('pendingOrdersCount').textContent = pendingTableCount;
+        // 4. 渲染汇总面板
+        document.getElementById('totalIncome').textContent = totalIncome.toLocaleString();
+        document.getElementById('closedOrdersCount').textContent = filteredClosedOrders.length;
+        // 未结算桌数不受模式影响，始终显示当前的
+        document.getElementById('pendingOrdersCount').textContent = pendingTableCount; 
+        
+        // 更新标签文本
+        document.getElementById('income-label').textContent = (view === 'daily' ? '当日总收入 (Ks)' : '累计总收入 (Ks)');
+        document.getElementById('closed-label').textContent = (view === 'daily' ? '当日已结算订单数' : '累计已结算订单数');
+        document.getElementById('pending-label').textContent = '未结算桌数'; // 保持不变
+
+        // 更新按钮激活状态
+        document.getElementById('daily-btn').classList.toggle('active', view === 'daily');
+        document.getElementById('total-btn').classList.toggle('active', view === 'total');
+    }
+    
+    // --- 切换视图功能 ---
+    function toggleView(view) {
+        if (currentView !== view) {
+            currentView = view;
+            renderSummary(currentView);
+        }
     }
 
-    // --- 业务逻辑 (使用云端保存) ---
+    // --- 业务逻辑：单条删除功能 (核心修改) ---
+    async function deleteSingleOrder(indexToDelete) {
+        if (indexToDelete === null || indexToDelete < 0 || indexToDelete >= globalCloudData.income_data.closedOrders.length) {
+            console.error("尝试删除无效索引的订单。", indexToDelete);
+            return;
+        }
+        
+        const record = globalCloudData.income_data.closedOrders[indexToDelete];
+        if (confirm(`确定要删除此笔收入记录吗？\n桌号: ${record.table}\n金额: ${record.total.toLocaleString()} Ks\n时间: ${new Date(record.timestamp).toLocaleString()}`)) {
+            
+            // 1. 从数组中移除该记录
+            const deletedOrder = globalCloudData.income_data.closedOrders.splice(indexToDelete, 1)[0];
+            
+            // 2. 重新计算总累计收入 (从总收入中减去被删除的金额)
+            globalCloudData.income_data.total -= deletedOrder.total;
+            
+            // 3. 同步到云端
+            const saved = await saveCloudData();
+            
+            if (saved) {
+                // 4. 重新渲染页面
+                renderSummary(currentView);
+                alert("单条收入记录已删除并已同步到云端。");
+            } else {
+                // 如果保存失败，回滚操作（虽然这不是最佳实践，但比丢失数据好）
+                globalCloudData.income_data.closedOrders.splice(indexToDelete, 0, deletedOrder);
+                globalCloudData.income_data.total += deletedOrder.total;
+                alert("删除失败，请检查网络连接。");
+            }
+        }
+    }
+    
+    // --- 业务逻辑：清空所有收入 (已修改为云端同步) ---
     async function clearAllIncome() {
         if (confirm("警告！您确定要清空所有的收入记录吗？此操作不可撤销，且不会影响当前未结算的订单。")) {
             
@@ -472,10 +607,9 @@
             const saved = await saveCloudData();
             
             if (saved) {
-                renderSummary();
+                renderSummary(currentView);
                 alert("所有收入记录已清空并已同步到云端。");
             } else {
-                // 如果保存失败，数据不会清空
                 alert("清空失败，请检查网络连接。");
             }
         }
