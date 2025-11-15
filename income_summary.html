@@ -24,7 +24,7 @@
 
         /* --- 顶部栏 --- */
         .header-bar {
-            background-color: #4CAF50; /* 绿色 */
+            background-color: #FF8C00; /* 统一为橙色主题 */
             color: white;
             padding: 15px 20px;
             display: flex;
@@ -35,11 +35,11 @@
         }
 
         .header-button {
-            background: #e6523f;
+            background: #FF4500; /* 统一为橙红色 */
             color: white;
             border: none;
             padding: 8px 15px;
-            border-radius: 8px;
+            border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
         }
@@ -49,15 +49,15 @@
             display: flex;
             justify-content: space-around;
             padding: 20px 0;
-            background-color: #e8f5e9; 
-            border-bottom: 2px solid #4CAF50;
+            background-color: #ffe4b5; /* 浅橙色背景 */
+            border-bottom: 2px solid #FF8C00;
         }
 
         .summary-card {
             text-align: center;
             flex: 1;
             padding: 10px 5px;
-            border-right: 1px solid #ddd;
+            border-right: 1px solid #ffaa55;
         }
         
         .summary-card:last-child {
@@ -67,7 +67,7 @@
         .summary-value {
             font-size: 1.5em;
             font-weight: bold;
-            color: #388e3c; 
+            color: #FF4500; /* 橙红色 */
             margin-bottom: 5px;
         }
         
@@ -114,13 +114,13 @@
         .order-table {
             font-size: 1.2em;
             font-weight: bold;
-            color: #d85050;
+            color: #FF8C00; /* 橙色 */
         }
 
         .order-total {
             font-size: 1.4em;
             font-weight: bold;
-            color: #d85050;
+            color: #FF4500; /* 橙红色 */
         }
 
         .order-details {
@@ -160,9 +160,14 @@
             padding: 30px 0;
             font-size: 0.9em;
         }
+        
+        /* 新增加载层样式 */
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); color: #FF8C00; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; z-index: 1000; transition: opacity 0.3s; }
     </style>
 </head>
 <body>
+    <div id="loading-overlay" style="display: flex;"> 正在从云端加载数据... 🚀 </div>
+
     <div class="container">
         <div class="header-bar">
             <span>💰 财务汇总</span>
@@ -206,42 +211,130 @@
     </div>
 
 <script>
-    const ORDERS_STORAGE_KEY = 'grill_table_orders';
-    const INCOME_STORAGE_KEY = 'grill_income_data';
+    // --- Cloud Sync Configuration (与 index.html 保持一致) ---
+    // 这是你的云端存储ID和密钥，确保和你的 index.html 中的值是完全一样的
+    const JSONBIN_ID = '69174442ae596e708f5901ae'; 
+    const JSONBIN_MASTER_KEY = '$2a$10$ol9N5tLV0G2AnDYaF4sO4O2l0RoR8OSXagA4IUy2wiwdntZDuzRh2';
+    const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
+
+    let globalCloudData = {
+        menu_data: [],
+        table_orders: {}, 
+        income_data: { total: 0, closedOrders: [] },
+        purchase_data: { productTemplate: {}, cartData: [] }
+    };
+    
+    // 用于存储 table_orders 的 Map 结构
+    let tableOrders = new Map(); 
+
+    // --- Cloud Utilities (核心：从云端加载数据) ---
+    async function loadCloudData() {
+        document.getElementById('loading-overlay').style.display = 'flex';
+        try {
+            const response = await fetch(JSONBIN_URL + '/latest', {
+                method: 'GET',
+                headers: {
+                    'X-Master-Key': JSONBIN_MASTER_KEY,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Cloud fetch failed: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            
+            if (data.record) {
+                globalCloudData = data.record;
+                // 确保所有顶层属性都存在
+                if (!globalCloudData.menu_data) globalCloudData.menu_data = [];
+                if (!globalCloudData.table_orders) globalCloudData.table_orders = {};
+                if (!globalCloudData.income_data) globalCloudData.income_data = { total: 0, closedOrders: [] };
+                if (!globalCloudData.purchase_data) globalCloudData.purchase_data = { productTemplate: {}, cartData: [] };
+
+                // 转换 table_orders 为 Map
+                tableOrders = new Map();
+                for (const [tableNum, orderData] of Object.entries(globalCloudData.table_orders)) {
+                    // 兼容旧的只存数组的结构
+                    if (Array.isArray(orderData)) {
+                         tableOrders.set(tableNum, { items: orderData, notes: '' });
+                    } else {
+                        // 确保 items 和 notes 存在
+                        if (!orderData.items) orderData.items = [];
+                        if (typeof orderData.notes !== 'string') orderData.notes = '';
+                        tableOrders.set(tableNum, orderData);
+                    }
+                }
+                console.log("数据从云端加载成功。", globalCloudData);
+            } else {
+                console.warn("云端数据结构不完整或为空，使用默认结构。", data);
+            }
+            
+            renderSummary(); // 加载成功后渲染页面
+        } catch (error) {
+            console.error("加载云端数据失败，使用本地默认数据。", error);
+            // 提醒用户加载失败，但不使用 alert 避免阻塞
+            const loadingOverlay = document.getElementById('loading-overlay');
+            loadingOverlay.textContent = '❌ 数据加载失败！请检查网络。';
+            loadingOverlay.style.backgroundColor = 'rgba(255, 230, 230, 0.9)';
+            loadingOverlay.style.color = '#FF4500';
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+            }, 3000);
+        } finally {
+             document.getElementById('loading-overlay').style.display = 'none';
+        }
+    }
+    
+    // --- Cloud Utilities (用于清空收入时同步到云端) ---
+    async function saveCloudData() {
+        // 确保 tableOrders 转换回 Object 以便保存
+        const storableTableOrders = {};
+        for (const [tableNum, data] of tableOrders.entries()) {
+            // 只保存有订单项或有备注的桌号
+            if (data.items.length > 0 || data.notes) {
+                storableTableOrders[tableNum] = data;
+            }
+        }
+        globalCloudData.table_orders = storableTableOrders;
+        
+        try {
+            const response = await fetch(JSONBIN_URL, {
+                method: 'PUT', // 使用 PUT 更新整个 Bin
+                headers: {
+                    'X-Master-Key': JSONBIN_MASTER_KEY,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(globalCloudData)
+            });
+
+            if (!response.ok) {
+                throw new Error(`Cloud save failed: ${response.statusText}`);
+            }
+            
+            const result = await response.json();
+            console.log("数据已成功同步到云端。", result);
+            return true;
+        } catch (error) {
+            console.error("保存云端数据失败。", error);
+            alert("数据保存失败！请检查 JSONBin 配置或网络。");
+            return false;
+        }
+    }
 
     // --- 实用函数 ---
-    function loadTableOrders() {
-        const storedOrders = localStorage.getItem(ORDERS_STORAGE_KEY);
-        if (storedOrders) {
-            try {
-                const obj = JSON.parse(storedOrders);
-                return new Map(Object.entries(obj));
-            } catch (e) {
-                console.error("Failed to parse table orders:", e);
-            }
-        }
-        return new Map();
-    }
-    
-    function loadIncomeData() {
-        const storedData = localStorage.getItem(INCOME_STORAGE_KEY);
-        if (storedData) {
-            try {
-                return JSON.parse(storedData);
-            } catch (e) {
-                console.error("Failed to parse income data:", e);
-            }
-        }
-        return { total: 0, closedOrders: [] };
-    }
+    // (已移除所有本地存储相关的代码，确保只使用云端数据)
 
-    function calculateOrderTotal(order) {
-        return order.reduce((total, item) => total + (item.price * item.quantity), 0);
+    function calculateOrderTotal(orderItems) {
+        // orderItems 是 { items: [], notes: '' } 结构中的 items 数组
+        return orderItems.reduce((total, item) => total + (item.price * item.quantity), 0);
     }
     
-    function calculateOrderSummary(order) {
-        const activeItems = order.filter(item => item.quantity > 0);
-        const total = calculateOrderTotal(order);
+    function calculateOrderSummary(orderData) {
+        // orderData 是 { items: [], notes: '' } 结构
+        const activeItems = orderData.items.filter(item => item.quantity > 0);
+        const total = calculateOrderTotal(activeItems);
         
         const details = activeItems.map(item => ({
              name: item.name,
@@ -254,18 +347,19 @@
 
     /**
      * 创建订单详情的HTML结构
-     * @param {object} record - 包含 table, amount, time, items 的订单记录
-     * @param {boolean} isClosed - 是否为已结算订单
      */
     function createDetailedOrderHTML(record, isClosed) {
+        const itemsToDisplay = isClosed ? record.items : record.details;
+        
         let detailsHTML = '';
-        if (record.items && record.items.length > 0) {
-            record.items.forEach(item => {
-                const subtotal = (item.price * item.quantity).toLocaleString();
+        if (itemsToDisplay && itemsToDisplay.length > 0) {
+            itemsToDisplay.forEach(item => {
+                // 确保 total 是数字，并格式化显示
+                const subtotal = (item.price * item.quantity);
                 detailsHTML += `
                     <div class="detail-line">
                         <span>${item.name} x ${item.quantity}</span>
-                        <span style="font-weight: bold;">${subtotal} Ks</span>
+                        <span style="font-weight: bold;">${subtotal.toLocaleString()} Ks</span>
                     </div>
                 `;
             });
@@ -273,14 +367,34 @@
              detailsHTML = '<div style="color:#aaa; text-align:center;">(无详细菜品记录)</div>';
         }
         
+        // 如果有备注，添加备注行
+        let notesHTML = '';
+        const notes = isClosed ? record.notes : record.notes; // 统一名称
+        if (notes) {
+            notesHTML = `<div style="margin-top: 5px; font-style: italic; color: #FF4500;">备注: ${notes}</div>`;
+        }
+        
+        let headerText = '';
+        let totalDisplay = record.total.toLocaleString();
+        
+        if (isClosed) {
+            const date = new Date(record.timestamp);
+            const timeString = `${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+            headerText = `桌号 ${record.table} - 结算时间: ${timeString}`;
+        } else {
+            headerText = `桌号：${record.table}号桌`;
+        }
+
+        
         return `
             <div class="order-item-card" style="background-color: ${isClosed ? '#f8fdf8' : '#fff4f4'}; border: 1px solid ${isClosed ? '#d4edda' : '#f5c6cb'};">
                 <div class="order-header-info">
-                    <span class="order-table">${isClosed ? '结算时间' : '桌号'}：${isClosed ? record.time : record.table + '号桌'}</span>
-                    <span class="order-total">${record.amount.toLocaleString()} Ks</span>
+                    <span class="order-table">${headerText}</span>
+                    <span class="order-total">${totalDisplay} Ks</span>
                 </div>
                 <div class="order-details">
                    ${detailsHTML}
+                   ${notesHTML}
                 </div>
             </div>
         `;
@@ -288,21 +402,23 @@
 
     // --- 渲染逻辑 ---
     function renderSummary() {
-        const incomeData = loadIncomeData();
-        const tableOrdersMap = loadTableOrders();
+        // 使用 globalCloudData 中的数据
+        const incomeData = globalCloudData.income_data;
         
         let pendingOrdersListHTML = '';
         let pendingTableCount = 0;
 
-        // --- 渲染待结算列表 (读取 ORDERS_STORAGE_KEY) ---
-        tableOrdersMap.forEach((order, tableNumber) => {
-            const summary = calculateOrderSummary(order);
-            if (summary.total > 0) {
+        // --- 渲染待结算列表 (读取 tableOrders Map) ---
+        tableOrders.forEach((orderData, tableNumber) => {
+            const summary = calculateOrderSummary(orderData);
+            // 只有订单金额大于0或有备注的桌号才算作待结算
+            if (summary.total > 0 || orderData.notes) { 
                 pendingTableCount++;
                 const record = { 
                     table: tableNumber, 
-                    items: summary.details, 
-                    amount: summary.total 
+                    details: summary.details, 
+                    total: summary.total, 
+                    notes: orderData.notes || '' 
                 };
                 pendingOrdersListHTML += createDetailedOrderHTML(record, false);
             }
@@ -316,7 +432,7 @@
         }
 
 
-        // --- 渲染已结算列表 (读取 INCOME_STORAGE_KEY) ---
+        // --- 渲染已结算列表 (读取 income_data.closedOrders) ---
         let closedOrdersListHTML = '';
         const closedOrdersListContainer = document.getElementById('closedOrdersList');
         
@@ -324,7 +440,15 @@
             // 按时间倒序显示 (最新在最上)
             const reversedOrders = [...incomeData.closedOrders].reverse(); 
             reversedOrders.forEach(record => {
-                closedOrdersListHTML += createDetailedOrderHTML(record, true);
+                // record 结构: { table, items, notes, total, timestamp }
+                const normalizedRecord = {
+                    table: record.table,
+                    items: record.items, 
+                    notes: record.notes,
+                    total: record.total,
+                    timestamp: record.timestamp
+                };
+                closedOrdersListHTML += createDetailedOrderHTML(normalizedRecord, true);
             });
             closedOrdersListContainer.innerHTML = closedOrdersListHTML;
         } else {
@@ -337,24 +461,36 @@
         document.getElementById('pendingOrdersCount').textContent = pendingTableCount;
     }
 
-    function clearAllIncome() {
+    // --- 业务逻辑 (使用云端保存) ---
+    async function clearAllIncome() {
         if (confirm("警告！您确定要清空所有的收入记录吗？此操作不可撤销，且不会影响当前未结算的订单。")) {
-            localStorage.setItem(INCOME_STORAGE_KEY, '{"total": 0, "closedOrders": []}');
-            renderSummary();
-            alert("所有收入记录已清空。");
+            
+            // 1. 重置收入数据
+            globalCloudData.income_data = { total: 0, closedOrders: [] };
+            
+            // 2. 同步到云端
+            const saved = await saveCloudData();
+            
+            if (saved) {
+                renderSummary();
+                alert("所有收入记录已清空并已同步到云端。");
+            } else {
+                // 如果保存失败，数据不会清空
+                alert("清空失败，请检查网络连接。");
+            }
         }
     }
     
     function goToOrderingPage() {
-        // ************ 修复区域 START ************
-        window.location.href = 'index.html'; // 链接到带空格的主文件
-        // ************ 修复区域 END ************
+        window.location.href = 'index.html';
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        renderSummary();
+        // 页面加载时从云端同步数据
+        loadCloudData();
     });
 </script>
 
 </body>
+
 </html>
