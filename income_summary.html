@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>收入汇总</title>
+    <title>收入汇总 (当日统计)</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -43,32 +43,6 @@
             cursor: pointer;
             font-weight: bold;
             margin-left: 10px;
-        }
-
-        /* --- 切换按钮 --- */
-        .switch-bar {
-            display: flex;
-            justify-content: center;
-            padding: 10px 20px 0;
-            background-color: #fff;
-            border-bottom: 1px solid #ddd;
-        }
-        .switch-btn {
-            flex: 1;
-            padding: 10px;
-            margin: 0 5px;
-            background-color: #eee;
-            border: none;
-            color: #666;
-            cursor: pointer;
-            font-weight: bold;
-            border-radius: 5px 5px 0 0;
-            transition: all 0.2s;
-        }
-        .switch-btn.active {
-            background-color: #FF8C00;
-            color: white;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
 
         /* --- 汇总面板 --- */
@@ -213,28 +187,22 @@
 
     <div class="container">
         <div class="header-bar">
-            <span>💰 财务汇总</span>
+            <span>💰 今日财务汇总</span>
             <button class="header-button" onclick="goToOrderingPage()">返回点单</button>
         </div>
         
-        <div class="switch-bar">
-            <button class="switch-btn active" id="daily-btn" onclick="toggleView('daily')">当日统计</button>
-            <button class="switch-btn" id="total-btn" onclick="toggleView('total')">累计总统计</button>
-        </div>
-
-
         <div class="summary-panel">
             <div class="summary-card">
                 <div class="summary-value" id="totalIncome">0</div>
-                <div class="summary-label" id="income-label">当日总收入 (Ks)</div>
+                <div class="summary-label">当日总收入 (Ks)</div>
             </div>
             <div class="summary-card">
                 <div class="summary-value" id="closedOrdersCount">0</div>
-                <div class="summary-label" id="closed-label">当日已结算订单数</div>
+                <div class="summary-label">当日已结算订单数</div>
             </div>
             <div class="summary-card">
                 <div class="summary-value red" id="pendingOrdersCount">0</div>
-                <div class="summary-label" id="pending-label">未结算桌数</div>
+                <div class="summary-label">未结算桌数 (当前)</div>
             </div>
         </div>
 
@@ -249,12 +217,12 @@
         
         <div class="closed-orders-section">
             <div class="section-title">
-                🟢 已结算记录 (按最新排序)
+                🟢 今日已结算记录 (按最新排序)
             </div>
             <div id="closedOrdersList">
-                <div class="no-pending">暂无已结算记录。</div>
+                <div class="no-pending">今日暂无已结算记录。</div>
             </div>
-            <button class="clear-income-btn" onclick="clearAllIncome()">清空所有收入记录 (累计)</button>
+            <button class="clear-income-btn" onclick="clearAllIncome()">清空所有收入记录 (累计历史数据)</button>
         </div>
 
     </div>
@@ -273,7 +241,6 @@
     };
     
     let tableOrders = new Map(); 
-    let currentView = 'daily'; // 新增：默认显示当日统计
 
     // --- 日期工具函数 ---
     /**
@@ -285,14 +252,6 @@
         return now.getTime();
     }
     
-    /**
-     * 检查一个时间戳是否是今天
-     */
-    function isToday(timestamp) {
-        return timestamp >= getTodayMidnightTimestamp();
-    }
-
-
     // --- Cloud Utilities ---
     async function loadCloudData() {
         document.getElementById('loading-overlay').style.display = 'flex';
@@ -336,7 +295,7 @@
                 console.warn("云端数据结构不完整或为空，使用默认结构。", data);
             }
             
-            renderSummary(currentView); // 加载成功后渲染页面
+            renderSummary(); // 加载成功后渲染页面 (现在不需要 view 参数)
         } catch (error) {
             console.error("加载云端数据失败，使用本地默认数据。", error);
             const loadingOverlay = document.getElementById('loading-overlay');
@@ -409,7 +368,6 @@
 
     /**
      * 创建订单详情的HTML结构
-     * 新增 index 参数用于单条删除定位
      */
     function createDetailedOrderHTML(record, isClosed, index = null) {
         const itemsToDisplay = isClosed ? record.items : record.details;
@@ -446,7 +404,7 @@
             headerText = `桌号：${record.table}号桌`;
         }
 
-        // 新增：如果已结算，添加删除按钮
+        // 如果已结算，添加删除按钮
         let deleteButton = '';
         if (isClosed && index !== null) {
             deleteButton = `<button class="delete-btn" onclick="deleteSingleOrder(${index})">删除</button>`;
@@ -467,17 +425,18 @@
         `;
     }
 
-    // --- 渲染逻辑 (核心修改：增加 view 参数) ---
-    function renderSummary(view) {
+    // --- 渲染逻辑 (现在固定为当日统计) ---
+    function renderSummary() {
         const incomeData = globalCloudData.income_data;
-        
-        // 1. 待结算桌号 (不受当日/累计影响，始终显示当前未结算的桌)
+        const midnight = getTodayMidnightTimestamp();
+
+        // 1. 待结算桌号 (始终显示当前未结算的桌)
         let pendingOrdersListHTML = '';
         let pendingTableCount = 0;
 
         tableOrders.forEach((orderData, tableNumber) => {
             const summary = calculateOrderSummary(orderData);
-            if (summary.total > 0 || orderData.notes) {
+            if (summary.total > 0 || orderData.notes) { 
                 pendingTableCount++;
                 const record = { 
                     table: tableNumber, 
@@ -497,16 +456,10 @@
         }
 
 
-        // 2. 筛选已结算记录 (根据 view 参数)
-        let filteredClosedOrders = incomeData.closedOrders;
-        let totalIncome = incomeData.total;
-        
-        if (view === 'daily') {
-            const midnight = getTodayMidnightTimestamp();
-            filteredClosedOrders = incomeData.closedOrders.filter(order => order.timestamp >= midnight);
-            // 重新计算当日总收入
-            totalIncome = filteredClosedOrders.reduce((sum, order) => sum + order.total, 0);
-        }
+        // 2. 筛选今日已结算记录
+        const filteredClosedOrders = incomeData.closedOrders.filter(order => order.timestamp >= midnight);
+        // 计算当日总收入
+        const totalDailyIncome = filteredClosedOrders.reduce((sum, order) => sum + order.total, 0);
         
         // 3. 渲染已结算列表
         let closedOrdersListHTML = '';
@@ -514,12 +467,10 @@
         
         if (filteredClosedOrders.length > 0) {
             // 按时间倒序显示 (最新在最上)
-            // 注意：这里需要记录原始数组的索引，以便删除时能找到正确的数据
             const reversedOrders = [...filteredClosedOrders].reverse(); 
             
             reversedOrders.forEach(filteredRecord => {
-                // 找到 filteredRecord 在原始 closedOrders 数组中的索引
-                // 这是实现精准删除的关键！
+                // 找到 filteredRecord 在原始 closedOrders 数组中的索引 (用于删除)
                 const originalIndex = incomeData.closedOrders.findIndex(originalRecord => 
                     originalRecord.timestamp === filteredRecord.timestamp && 
                     originalRecord.total === filteredRecord.total
@@ -537,34 +488,16 @@
             });
             closedOrdersListContainer.innerHTML = closedOrdersListHTML;
         } else {
-            closedOrdersListContainer.innerHTML = '<div class="no-pending">暂无已结算记录。</div>';
+            closedOrdersListContainer.innerHTML = '<div class="no-pending">今日暂无已结算记录。</div>';
         }
 
         // 4. 渲染汇总面板
-        document.getElementById('totalIncome').textContent = totalIncome.toLocaleString();
+        document.getElementById('totalIncome').textContent = totalDailyIncome.toLocaleString();
         document.getElementById('closedOrdersCount').textContent = filteredClosedOrders.length;
-        // 未结算桌数不受模式影响，始终显示当前的
         document.getElementById('pendingOrdersCount').textContent = pendingTableCount; 
-        
-        // 更新标签文本
-        document.getElementById('income-label').textContent = (view === 'daily' ? '当日总收入 (Ks)' : '累计总收入 (Ks)');
-        document.getElementById('closed-label').textContent = (view === 'daily' ? '当日已结算订单数' : '累计已结算订单数');
-        document.getElementById('pending-label').textContent = '未结算桌数'; // 保持不变
-
-        // 更新按钮激活状态
-        document.getElementById('daily-btn').classList.toggle('active', view === 'daily');
-        document.getElementById('total-btn').classList.toggle('active', view === 'total');
     }
     
-    // --- 切换视图功能 ---
-    function toggleView(view) {
-        if (currentView !== view) {
-            currentView = view;
-            renderSummary(currentView);
-        }
-    }
-
-    // --- 业务逻辑：单条删除功能 (核心修改) ---
+    // --- 业务逻辑：单条删除功能 (云端同步) ---
     async function deleteSingleOrder(indexToDelete) {
         if (indexToDelete === null || indexToDelete < 0 || indexToDelete >= globalCloudData.income_data.closedOrders.length) {
             console.error("尝试删除无效索引的订单。", indexToDelete);
@@ -585,10 +518,10 @@
             
             if (saved) {
                 // 4. 重新渲染页面
-                renderSummary(currentView);
+                renderSummary();
                 alert("单条收入记录已删除并已同步到云端。");
             } else {
-                // 如果保存失败，回滚操作（虽然这不是最佳实践，但比丢失数据好）
+                // 如果保存失败，回滚操作
                 globalCloudData.income_data.closedOrders.splice(indexToDelete, 0, deletedOrder);
                 globalCloudData.income_data.total += deletedOrder.total;
                 alert("删除失败，请检查网络连接。");
@@ -596,9 +529,9 @@
         }
     }
     
-    // --- 业务逻辑：清空所有收入 (已修改为云端同步) ---
+    // --- 业务逻辑：清空所有收入 (云端同步) ---
     async function clearAllIncome() {
-        if (confirm("警告！您确定要清空所有的收入记录吗？此操作不可撤销，且不会影响当前未结算的订单。")) {
+        if (confirm("警告！您确定要清空所有的收入记录吗？此操作不可撤销，会清除所有历史记录。")) {
             
             // 1. 重置收入数据
             globalCloudData.income_data = { total: 0, closedOrders: [] };
@@ -607,8 +540,8 @@
             const saved = await saveCloudData();
             
             if (saved) {
-                renderSummary(currentView);
-                alert("所有收入记录已清空并已同步到云端。");
+                renderSummary();
+                alert("所有收入记录（包括历史数据）已清空并已同步到云端。");
             } else {
                 alert("清空失败，请检查网络连接。");
             }
