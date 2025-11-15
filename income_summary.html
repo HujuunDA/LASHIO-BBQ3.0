@@ -32,16 +32,6 @@
             align-items: center;
             font-size: 1.5em;
             font-weight: bold;
-            position: relative; /* 为日期信息定位 */
-        }
-        
-        /* 调试信息样式 */
-        #debug-info {
-            position: absolute;
-            bottom: -20px;
-            right: 5px;
-            font-size: 0.7em;
-            color: #ccc;
         }
 
         .header-button {
@@ -199,7 +189,6 @@
         <div class="header-bar">
             <span>💰 今日财务汇总</span>
             <button class="header-button" onclick="goToOrderingPage()">返回点单</button>
-            <span id="debug-info"></span>
         </div>
         
         <div class="summary-panel">
@@ -240,7 +229,6 @@
 
 <script>
     // --- Cloud Sync Configuration (与 index.html 保持一致) ---
-    // 再次提醒：请确保这里的 ID 和 Key 与 index.html 中的完全一致！
     const JSONBIN_ID = '69174442ae596e708f5901ae'; 
     const JSONBIN_MASTER_KEY = '$2a$10$ol9N5tLV0G2AnDYaF4sO4O2l0RoR8OSXagA4IUy2wiwdntZDuzRh2';
     const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
@@ -261,7 +249,6 @@
      */
     function getTodayMidnightTimestamp() {
         const now = new Date();
-        // 设置到今天午夜
         now.setHours(0, 0, 0, 0); 
         return now.getTime();
     }
@@ -270,13 +257,11 @@
     async function loadCloudData() {
         document.getElementById('loading-overlay').style.display = 'flex';
         try {
-            // 确保每次都获取最新的数据
             const response = await fetch(JSONBIN_URL + '/latest', {
                 method: 'GET',
                 headers: {
                     'X-Master-Key': JSONBIN_MASTER_KEY,
                     'Content-Type': 'application/json',
-                    // 确保不使用缓存
                     'Cache-Control': 'no-cache' 
                 }
             });
@@ -289,12 +274,31 @@
             
             if (data.record) {
                 globalCloudData = data.record;
-                // ... (数据初始化和 Map 转换逻辑保持不变)
+                // 确保所有顶层属性都存在
                 if (!globalCloudData.menu_data) globalCloudData.menu_data = [];
                 if (!globalCloudData.table_orders) globalCloudData.table_orders = {};
                 if (!globalCloudData.income_data) globalCloudData.income_data = { total: 0, closedOrders: [] };
                 if (!globalCloudData.purchase_data) globalCloudData.purchase_data = { productTemplate: {}, cartData: [] };
 
+                // ****** 核心修复点 START ******
+                // 确保时间戳是数字，以应对 index.html 存储格式不一致的问题
+                if (globalCloudData.income_data.closedOrders && Array.isArray(globalCloudData.income_data.closedOrders)) {
+                    globalCloudData.income_data.closedOrders.forEach(order => {
+                        // 如果 timestamp 是字符串，尝试转换成数字
+                        if (typeof order.timestamp === 'string') {
+                            order.timestamp = new Date(order.timestamp).getTime();
+                        } 
+                        // 如果转换后不是数字，或者原本就不是数字，并且不是 null/undefined，则尝试解析为整数
+                        if (typeof order.timestamp !== 'number' || isNaN(order.timestamp)) {
+                             // 尝试将它解析为整数（以防它是一个数字字符串）
+                             order.timestamp = parseInt(order.timestamp, 10) || 0; 
+                        }
+                    });
+                }
+                // ****** 核心修复点 END ******
+
+
+                // 转换 table_orders 为 Map
                 tableOrders = new Map();
                 for (const [tableNum, orderData] of Object.entries(globalCloudData.table_orders)) {
                     if (Array.isArray(orderData)) {
@@ -305,7 +309,7 @@
                         tableOrders.set(tableNum, orderData);
                     }
                 }
-                console.log("数据从云端加载成功。", globalCloudData);
+                console.log("数据从云端加载成功。");
             } else {
                 console.warn("云端数据结构不完整或为空，使用默认结构。", data);
             }
@@ -326,8 +330,6 @@
              document.getElementById('loading-overlay').style.display = 'none';
         }
     }
-    
-    // ... (saveCloudData, calculateOrderTotal, calculateOrderSummary, createDetailedOrderHTML 保持不变)
     
     async function saveCloudData() {
         document.getElementById('loading-overlay').textContent = '正在同步到云端...';
@@ -366,6 +368,7 @@
         }
     }
 
+    // --- 实用函数 (保持不变) ---
     function calculateOrderTotal(orderItems) {
         return orderItems.reduce((total, item) => total + (item.price * item.quantity), 0);
     }
@@ -412,7 +415,9 @@
         
         if (isClosed) {
             const date = new Date(record.timestamp);
-            const timeString = `${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+            // 确保时间戳是有效数字
+            const timeString = isNaN(date.getTime()) ? '时间未知' : 
+                               `${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
             headerText = `桌号 ${record.table} - 结算时间: ${timeString}`;
         } else {
             headerText = `桌号：${record.table}号桌`;
@@ -442,11 +447,6 @@
     function renderSummary() {
         const incomeData = globalCloudData.income_data;
         const midnight = getTodayMidnightTimestamp();
-        
-        // ** DEBUG ** 显示今天午夜的时间，方便用户确认时区是否正确
-        const midnightDate = new Date(midnight);
-        document.getElementById('debug-info').textContent = `今日筛选起始时间: ${midnightDate.toLocaleString()}`;
-
 
         // 1. 待结算桌号 (始终显示当前未结算的桌)
         let pendingOrdersListHTML = '';
@@ -475,6 +475,7 @@
 
 
         // 2. 筛选今日已结算记录
+        // 关键：筛选出 timestamp >= 今天午夜的记录
         const filteredClosedOrders = incomeData.closedOrders.filter(order => order.timestamp >= midnight);
         // 计算当日总收入
         const totalDailyIncome = filteredClosedOrders.reduce((sum, order) => sum + order.total, 0);
@@ -511,23 +512,9 @@
         document.getElementById('totalIncome').textContent = totalDailyIncome.toLocaleString();
         document.getElementById('closedOrdersCount').textContent = filteredClosedOrders.length;
         document.getElementById('pendingOrdersCount').textContent = pendingTableCount; 
-        
-        // ** DEBUG ** 打印所有记录的时间戳，用于最终的排除法
-        console.log("--- 收入记录调试信息 ---");
-        console.log("今天午夜时间戳 (Local):", midnight);
-        if (incomeData.closedOrders.length > 0) {
-             incomeData.closedOrders.forEach(order => {
-                const isFiltered = order.timestamp >= midnight;
-                const recordDate = new Date(order.timestamp).toLocaleString();
-                console.log(`时间: ${recordDate} (时间戳: ${order.timestamp}) - 是否显示: ${isFiltered ? '✅ 是' : '❌ 否'}`);
-            });
-        } else {
-            console.log("云端 closedOrders 数组为空。");
-        }
     }
     
-    // ... (deleteSingleOrder, clearAllIncome, goToOrderingPage 保持不变)
-
+    // --- 业务逻辑：单条删除功能 (云端同步) ---
     async function deleteSingleOrder(indexToDelete) {
         if (indexToDelete === null || indexToDelete < 0 || indexToDelete >= globalCloudData.income_data.closedOrders.length) {
             console.error("尝试删除无效索引的订单。", indexToDelete);
@@ -538,7 +525,8 @@
         if (confirm(`确定要删除此笔收入记录吗？\n桌号: ${record.table}\n金额: ${record.total.toLocaleString()} Ks\n时间: ${new Date(record.timestamp).toLocaleString()}`)) {
             
             const deletedOrder = globalCloudData.income_data.closedOrders.splice(indexToDelete, 1)[0];
-            globalCloudData.income_data.total -= deletedOrder.total;
+            // 确保计算减去的是数字
+            globalCloudData.income_data.total = parseFloat(globalCloudData.income_data.total) - parseFloat(deletedOrder.total);
             
             const saved = await saveCloudData();
             
@@ -547,12 +535,13 @@
                 alert("单条收入记录已删除并已同步到云端。");
             } else {
                 globalCloudData.income_data.closedOrders.splice(indexToDelete, 0, deletedOrder);
-                globalCloudData.income_data.total += deletedOrder.total;
+                globalCloudData.income_data.total = parseFloat(globalCloudData.income_data.total) + parseFloat(deletedOrder.total);
                 alert("删除失败，请检查网络连接。");
             }
         }
     }
     
+    // --- 业务逻辑：清空所有收入 (云端同步) ---
     async function clearAllIncome() {
         if (confirm("警告！您确定要清空所有的收入记录吗？此操作不可撤销，会清除所有历史记录。")) {
             
