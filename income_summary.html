@@ -236,7 +236,7 @@
     let globalCloudData = {
         menu_data: [],
         table_orders: {}, 
-        income_data: { total: 0, closedOrders: [] },
+        income_data: { total: 0, closedOrders: [] }, // closedOrders 存储所有历史记录
         purchase_data: { productTemplate: {}, cartData: [] }
     };
     
@@ -446,7 +446,7 @@
     // --- 渲染逻辑 (固定为当日统计) ---
     function renderSummary() {
         const incomeData = globalCloudData.income_data;
-        const midnight = getTodayMidnightTimestamp();
+        const midnight = getTodayMidnightTimestamp(); // 获取今天零点时间戳
 
         // 1. 待结算桌号 (始终显示当前未结算的桌)
         let pendingOrdersListHTML = '';
@@ -475,7 +475,7 @@
 
 
         // 2. 筛选今日已结算记录
-        // 关键：筛选出 timestamp >= 今天午夜的记录
+        // 关键：筛选出 timestamp >= 今天午夜的记录，实现只统计当天数据
         const filteredClosedOrders = incomeData.closedOrders.filter(order => order.timestamp >= midnight);
         // 计算当日总收入
         const totalDailyIncome = filteredClosedOrders.reduce((sum, order) => sum + order.total, 0);
@@ -485,7 +485,7 @@
         const closedOrdersListContainer = document.getElementById('closedOrdersList');
         
         if (filteredClosedOrders.length > 0) {
-            const reversedOrders = [...filteredClosedOrders].reverse(); 
+            const reversedOrders = [...filteredClosedOrders].reverse(); // 按时间倒序显示
             
             reversedOrders.forEach(filteredRecord => {
                 // 关键：找到 filteredRecord 在【原始】closedOrders 数组中的索引 (用于删除)
@@ -516,6 +516,7 @@
     
     // --- 业务逻辑：单条删除功能 (云端同步) ---
     async function deleteSingleOrder(indexToDelete) {
+        // 此函数从 globalCloudData.income_data.closedOrders (全部历史记录) 中删除单条记录
         if (indexToDelete === null || indexToDelete < 0 || indexToDelete >= globalCloudData.income_data.closedOrders.length) {
             console.error("尝试删除无效索引的订单。", indexToDelete);
             return;
@@ -545,7 +546,7 @@
     async function clearAllIncome() {
         if (confirm("警告！您确定要清空所有的收入记录吗？此操作不可撤销，会清除所有历史记录。")) {
             
-            globalCloudData.income_data = { total: 0, closedOrders: [] };
+            globalCloudData.income_data = { total: 0, closedOrders: [] }; // 清空所有记录
             
             const saved = await saveCloudData();
             
