@@ -166,9 +166,7 @@
             <span id="saveIndicator" style="color: #FFE4B5; font-size: 14px; margin-left: 10px;"></span>
         </div>
         <div class="right-buttons">
-            <button id="editMenuBtn">编辑菜单</button>
-            <button id="incomeSummaryBtn">收入汇总</button>
-            <button id="purchaseManagerBtn">采购管理</button> 
+            <button id="settingsBtn">⚙️ 设置</button>
         </div>
     </header>
 
@@ -208,6 +206,18 @@
             </div>
         </div>
     </div>
+    
+    <div id="settingsModal" class="modal">
+        <div class="modal-content" style="max-width: 300px;">
+            <h2>⚙️ 系统设置与管理</h2>
+            <div id="settingsGrid" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
+                <button id="modalEditMenuBtn" style="padding: 15px; background-color: #f7f7f7; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;">✏️ 编辑菜单</button>
+                <button id="modalIncomeSummaryBtn" style="padding: 15px; background-color: #f7f7f7; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;">💰 收入汇总</button>
+                <button id="modalPurchaseManagerBtn" style="padding: 15px; background-color: #f7f7f7; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;">🛒 采购管理</button>
+            </div>
+            <button id="settingsCloseBtn" class="close-btn">关闭</button>
+        </div>
+    </div>
 
     <script>
         // --- Cloud Sync Configuration ---
@@ -225,7 +235,7 @@
         let menuItems = [];
         let tableOrders = new Map(); 
 
-        // --- Debounce Utility (新增) ---
+        // --- Debounce Utility ---
         function debounce(fn, wait) {
             let timeout;
             return function(...args) {
@@ -281,7 +291,6 @@
             }
         }
 
-        // 修改 saveCloudData 以显示保存状态
         async function saveCloudData() {
             globalCloudData.menu_data = menuItems;
             
@@ -339,6 +348,7 @@
         const orderCountElement = document.getElementById('orderCount');
         const tableModal = document.getElementById('tableModal');
         const orderModal = document.getElementById('orderModal');
+        const settingsModal = document.getElementById('settingsModal'); // 新增
         const tableDisplay = document.getElementById('table-display');
         const tableNotesInput = document.getElementById('table-notes-input'); 
         let currentTableNumber = null;
@@ -457,7 +467,7 @@
             });
         }
 
-        // 更新数量逻辑 (修改点：将 saveCloudData 替换为 debouncedSaveCloudData)
+        // 更新数量逻辑 
         async function updateQuantity(id, change) {
             const currentOrderData = tableOrders.get(currentTableNumber);
             let currentItems = currentOrderData.items; 
@@ -487,7 +497,7 @@
                 tableOrders.delete(currentTableNumber);
             }
             
-            // 🌟 性能提升点: 使用防抖保存
+            // 性能提升点: 使用防抖保存
             debouncedSaveCloudData(); 
             
             // 立即更新 UI，实现乐观更新
@@ -626,11 +636,16 @@
 
         // --- 事件绑定和初始化 ---
         function bindEventListeners() {
-            document.getElementById('editMenuBtn').onclick = () => window.location.href = 'edit_menu.html';
-            document.getElementById('incomeSummaryBtn').onclick = () => window.location.href = 'income_summary.html';
-            document.getElementById('purchaseManagerBtn').onclick = () => window.location.href = '16.36.html';
+            
+            // 🌟 核心修改：设置按钮和模态框内的跳转
+            document.getElementById('settingsBtn').onclick = () => showModal(settingsModal);
+            
+            document.getElementById('modalEditMenuBtn').onclick = () => window.location.href = 'edit_menu.html';
+            document.getElementById('modalIncomeSummaryBtn').onclick = () => window.location.href = 'income_summary.html';
+            document.getElementById('modalPurchaseManagerBtn').onclick = () => window.location.href = '16.36.html';
+            document.getElementById('settingsCloseBtn').onclick = () => hideModal(settingsModal);
 
-            // 备注框输入事件 (修改点：将 saveCloudData 替换为 debouncedSaveCloudData)
+            // 备注框输入事件 (性能优化点)
             tableNotesInput.addEventListener('input', () => {
                 if (currentTableNumber === null) {
                     tableNotesInput.value = '';
@@ -644,9 +659,8 @@
                     tableOrders.set(currentTableNumber, { items: [], notes: currentOrderData.notes });
                 }
 
-                // 🌟 性能提升点: 使用防抖同步备注
                 debouncedSaveCloudData(); 
-                renderTableGrid(); // 备注改变可能影响 tableGrid 状态
+                renderTableGrid(); 
             });
 
 
@@ -678,10 +692,13 @@
                 if (event.target == orderModal) {
                     hideModal(orderModal);
                 }
+                if (event.target == settingsModal) {
+                    hideModal(settingsModal);
+                }
             }
         }
         
-        // 页面启动
+        // 页面启动 (这里是关键！确保只有初始化操作)
         document.addEventListener('DOMContentLoaded', async () => {
             await loadCloudData();
             document.getElementById('loading-overlay').style.display = 'none';
