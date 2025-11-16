@@ -81,10 +81,14 @@
             padding: 15px; 
             margin-top: 0; 
             font-weight: bold; 
-            font-size: 16px; 
+            font-size: 16px; /* 分类标题字体大小保持 16px */
         }
         .menu-item { display: flex; justify-content: space-between; align-items: center; background-color: white; padding: 15px 10px; border-bottom: 1px solid #eee; }
-        .item-info .name { font-size: 20px; font-weight: bold; margin-bottom: 5px; }
+        .item-info .name { 
+            font-size: 20px; /* ***修改：菜品名字字体放大到 20px*** */
+            font-weight: bold; 
+            margin-bottom: 5px; 
+        }
         .item-info .price { font-size: 14px; color: #666; }
         .quantity-control { display: flex; align-items: center; }
         .control-btn { 
@@ -496,10 +500,14 @@
             }
         }
         
-        // 渲染订单详情逻辑 (新增显示备注)
+        // 渲染订单详情逻辑 (新增显示备注和排序)
         function renderOrderDetails() {
             const currentOrderData = tableOrders.get(currentTableNumber) || { items: [], notes: '' };
-            const currentItems = currentOrderData.items;
+            let currentItems = currentOrderData.items;
+
+            // ***新增：按菜品名称进行排序 (A-Z)***
+            currentItems.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
+            
             const detailsContent = document.getElementById('orderDetailsContent');
             const totalDisplay = document.getElementById('orderModalTotal');
             const title = document.getElementById('orderModalTitle');
@@ -519,7 +527,7 @@
             currentItems.forEach(item => {
                 html += `
                     <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee;">
-                        <span style="font-weight: bold;">${item.name}</span>
+                        <span style="font-weight: bold; font-size: 20px;">${item.name}</span>
                         <span style="flex-grow: 1; text-align: center;">x ${item.quantity}</span>
                         <span>${(item.price * item.quantity).toLocaleString()} Ks</span>
                     </li>
@@ -675,4 +683,3 @@
     </script>
 </body>
 </html>
-
