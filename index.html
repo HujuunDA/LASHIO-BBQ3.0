@@ -12,7 +12,7 @@
             font-family: Arial, sans-serif; 
             background-color: #f4f4f4; 
             padding-bottom: 60px; 
-            /* 解决输入框自动缩放问题 */
+            /* 解决了 Safari 输入框自动缩放问题 */
             -webkit-text-size-adjust: 100%;
         } 
         .top-nav { 
@@ -98,7 +98,7 @@
             background-color: white; 
             padding: 15px 10px; 
             border-bottom: 1px solid #eee; 
-            cursor: pointer; /* 🌟 提示用户整个行可点击 */
+            cursor: pointer; /* 提示用户整个行可点击 */
         }
         .item-info .name { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
         .item-info .price { font-size: 14px; color: #666; }
@@ -447,7 +447,7 @@
             }
         }
         
-        // 渲染菜单 (MODIFIED)
+        // 渲染菜单 
         function renderMenu() {
             const { latestMenu, categories } = getLatestMenuStructure();
             menuContainer.innerHTML = '';
@@ -470,7 +470,7 @@
                     
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'menu-item';
-                    itemDiv.setAttribute('data-id', item.id); // 🌟 关键：给整个菜单项添加ID
+                    itemDiv.setAttribute('data-id', item.id); // 关键：给整个菜单项添加ID
                     itemDiv.innerHTML = `
                         <div class="item-info">
                             <div class="name">${item.name}</div>
@@ -485,10 +485,9 @@
                     menuContainer.appendChild(itemDiv);
                 });
             });
-            // 不再需要在这里调用 bindMenuButtons，因为我们使用事件委托 (见 bindMenuInteractions)
         }
         
-        // 🌟 新增/修改: 集中处理菜单交互 (事件委托)
+        // 集中处理菜单交互 (事件委托)
         function bindMenuInteractions() {
             menuContainer.addEventListener('click', async (e) => {
                 if (currentTableNumber === null) {
@@ -504,7 +503,7 @@
 
                 // 1. 处理 +/- 按钮点击 (减号只应该在这里处理)
                 if (target.classList.contains('control-btn')) {
-                    // 🌟 关键：阻止事件冒泡到父级菜单项，避免一次点击导致两次增加 (如果点了+)
+                    // 关键：阻止事件冒泡到父级菜单项，避免一次点击导致两次增加
                     e.stopPropagation(); 
                     itemId = target.getAttribute('data-id');
                     change = target.classList.contains('add') ? 1 : -1;
@@ -525,8 +524,15 @@
         }
 
 
-        // 更新数量逻辑 
+        // 更新数量逻辑 (已添加震动反馈)
         async function updateQuantity(id, change) {
+            
+            // 🌟 关键：震动反馈代码 (在支持的设备上生效)
+            if (navigator.vibrate) {
+                // 50毫秒的短震动，提供轻微的反馈感
+                navigator.vibrate(50); 
+            }
+
             const currentOrderData = tableOrders.get(currentTableNumber);
             let currentItems = currentOrderData.items; 
             const menu = getLatestMenuStructure().latestMenu;
@@ -755,7 +761,7 @@
                 }
             }
             
-            // 🌟 新增：绑定菜单行点击交互（只绑定一次）
+            // 绑定菜单行点击交互（只绑定一次）
             bindMenuInteractions();
         }
         
