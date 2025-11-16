@@ -161,12 +161,12 @@
 
     <header class="top-nav">
         <div class="left-controls">
-            <div id="table-display">请选择桌号</div>
-            <input type="text" id="table-notes-input" placeholder="输入备注（如：加辣）">
+            <div id="table-display">选择桌号</div>
+            <input type="text" id="table-notes-input" placeholder="备注">
             <span id="saveIndicator" style="color: #FFE4B5; font-size: 14px; margin-left: 10px;"></span>
         </div>
         <div class="right-buttons">
-            <button id="settingsBtn">⚙️ 设置</button>
+            <button id="settingsBtn">⚙️</button>
         </div>
     </header>
 
@@ -371,7 +371,7 @@
         // 切换桌号逻辑
         function selectNewTable(tableNumber) {
             currentTableNumber = tableNumber;
-            tableDisplay.textContent = `当前桌号: ${tableNumber}`;
+            tableDisplay.textContent = `桌号: ${tableNumber}`;
             
             if (!tableOrders.has(tableNumber)) {
                 tableOrders.set(tableNumber, { items: [], notes: '' }); 
