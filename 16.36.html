@@ -142,7 +142,7 @@
             display: flex;
             align-items: center;
             flex-grow: 1;
-            font-size: 16px;
+            font-size: 20px; /* MODIFIED: Increased font size for product name */
             color: #1c1c1e;
         }
         
@@ -256,6 +256,11 @@
             border-bottom: 2px solid #d1d1d6;
         }
         
+        /* 🌟 新增：购物车商品名称字体大小 */
+        .cart-item-row .item-name {
+            font-size: 20px; /* MODIFIED: Increased font size for cart item name */
+        }
+
         .cart-item-row.purchased td {
             color: #aeaeb2; 
             background-color: transparent;
@@ -855,6 +860,9 @@
         
         const cartItems = cloudData.cartData; 
 
+        // 🌟 MODIFIED: 对购物车项目按名称进行中文(拼音)排序
+        cartItems.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
+
         if (cartItems.length === 0) {
             tableHtml = `<tr><td colspan="3" style="text-align: center; padding: 20px; color:#8e8e93;">购物车是空的，请在选品清单中勾选！</td></tr>`;
         } else {
@@ -961,6 +969,8 @@
         let summaryText = `📅 ${todayDate} 采购总结:\n\n`; 
         let hasPurchasedItems = false;
         const cartItems = cloudData.cartData;
+        
+        // 注意：这里不需要再次排序，因为 renderCart 已经排好序
         
         for (let i = 0; i < cartItems.length; i++) {
             const item = cartItems[i];
