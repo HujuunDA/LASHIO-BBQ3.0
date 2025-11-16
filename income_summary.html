@@ -413,7 +413,7 @@
             // 确保时间戳是有效数字
             const timeString = isNaN(date.getTime()) ? '时间未知' : 
                                `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-            headerText = `桌号 ${record.table} - 结算时间: ${timeString}`;
+            headerText = `桌号 ${record.table} - 时间: ${timeString}`;
         } else {
             headerText = `桌号：${record.table}号桌`;
         }
