@@ -2,12 +2,19 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>点菜单程序</title>
     <style>
         /* --- 烧烤橙色主题 CSS 修改 --- */
         /* 移除顶部导航栏留下的 padding */
-        body { margin: 0; font-family: Arial, sans-serif; background-color: #f4f4f4; padding-bottom: 60px; } 
+        body { 
+            margin: 0; 
+            font-family: Arial, sans-serif; 
+            background-color: #f4f4f4; 
+            padding-bottom: 60px; 
+            /* 🌟 解决输入框自动缩放问题 */
+            -webkit-text-size-adjust: 100%;
+        } 
         .top-nav { 
             display: flex; 
             justify-content: space-between; 
@@ -48,15 +55,16 @@
             font-weight: bold; 
         }
         
-        /* 新增: 备注输入框样式 (🌟 宽度已修改为 180px) */
+        /* 新增: 备注输入框样式 (🌟 字体改为 16px 解决自动缩放问题) */
         #table-notes-input {
             flex-grow: 1; /* 占据剩余的大部分空间 */
             padding: 8px;
             border: 1px solid #FF4500; /* 红色边框 */
             border-radius: 5px;
-            font-size: 14px;
+            font-size: 16px; /* 关键：提高字体大小，防止 Safari 自动缩放 */
             color: #333;
             max-width: 180px; /* 限制最大宽度，让它变短 */
+            touch-action: manipulation; /* 优化触摸响应 */
         }
 
         .right-buttons {
@@ -100,6 +108,7 @@
             cursor: pointer; 
             padding: 0; 
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); 
+            touch-action: manipulation; /* 🌟 优化快速点击，防止缩放 */
         }
         .control-btn.add { 
             background-color: #FF4500; 
@@ -144,7 +153,24 @@
         .table-number-btn.selected.occupied { background-color: #FF8C00; border-color: #FF4500; }
         .close-btn { background-color: #FF4500; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
         .order-modal-content { background-color: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); text-align: left; }
-        .order-actions button { flex-grow: 1; padding: 12px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 16px; }
+        /* 🌟 修改: 订单操作栏布局，实现结算靠左，清空/关闭靠右 */
+        .order-actions { 
+            display: flex; 
+            justify-content: space-between; /* 关键：左中右布局 */
+            align-items: center;
+            margin-top: 15px; /* 增加一点间距 */
+        }
+        .order-actions button { 
+            /* 移除 flex-grow: 1，让按钮按内容大小显示 */
+            padding: 12px 15px; 
+            border: none; 
+            border-radius: 5px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            font-size: 16px;
+            flex-grow: 0; 
+            white-space: nowrap; 
+        }
         .checkout-btn { background-color: #34c759; color: white; }
         .clear-btn { background-color: #FF8C00; color: white; }
         .close-order-btn { background-color: #ddd; color: #333; }
@@ -161,12 +187,12 @@
 
     <header class="top-nav">
         <div class="left-controls">
-            <div id="table-display">选择桌号</div>
-            <input type="text" id="table-notes-input" placeholder="备注">
+            <div id="table-display">桌号: 1</div>
+            <input type="text" id="table-notes-input" placeholder="输入备注（如：加辣）">
             <span id="saveIndicator" style="color: #FFE4B5; font-size: 14px; margin-left: 10px;"></span>
         </div>
         <div class="right-buttons">
-            <button id="settingsBtn">⚙️</button>
+            <button id="settingsBtn">⚙️ 设置</button>
         </div>
     </header>
 
@@ -201,8 +227,11 @@
             <div class="order-total-display" id="orderModalTotal">总额: 0 Ks</div>
             <div class="order-actions">
                 <button class="checkout-btn" id="checkoutBtn">结算 (€)</button>
-                <button class="clear-btn" id="clearOrderBtn">清空订单</button>
-                <button class="close-order-btn" id="orderCloseBtn">关闭</button>
+                
+                <div style="display: flex; gap: 10px;">
+                    <button class="clear-btn" id="clearOrderBtn">清空订单</button>
+                    <button class="close-order-btn" id="orderCloseBtn">关闭</button>
+                </div>
             </div>
         </div>
     </div>
