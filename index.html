@@ -48,7 +48,7 @@
             font-weight: bold; 
         }
         
-        /* 新增: 备注输入框样式 */
+        /* 新增: 备注输入框样式 (🌟 宽度已修改为 180px) */
         #table-notes-input {
             flex-grow: 1; /* 占据剩余的大部分空间 */
             padding: 8px;
@@ -56,7 +56,7 @@
             border-radius: 5px;
             font-size: 14px;
             color: #333;
-            max-width: 300px; /* 限制最大宽度，防止挤压右侧按钮 */
+            max-width: 180px; /* 限制最大宽度，让它变短 */
         }
 
         .right-buttons {
@@ -637,7 +637,7 @@
         // --- 事件绑定和初始化 ---
         function bindEventListeners() {
             
-            // 🌟 核心修改：设置按钮和模态框内的跳转
+            // 设置按钮和模态框内的跳转
             document.getElementById('settingsBtn').onclick = () => showModal(settingsModal);
             
             document.getElementById('modalEditMenuBtn').onclick = () => window.location.href = 'edit_menu.html';
