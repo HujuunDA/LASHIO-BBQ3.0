@@ -190,7 +190,7 @@
 </head>
 <body>
     
-    <div id="loading-overlay" style="display: flex;"> 正在从云端加载数据... 🚀 </div>
+    <div id="loading-overlay" style="display: flex;"> 加载数据... 🚀 </div>
 
     <header class="top-nav">
         <div class="left-controls">
@@ -199,7 +199,7 @@
             <span id="saveIndicator" style="color: #FFE4B5; font-size: 14px; margin-left: 10px;"></span>
         </div>
         <div class="right-buttons">
-            <button id="settingsBtn">⚙️ 设置</button>
+            <button id="settingsBtn">设置</button>
         </div>
     </header>
 
@@ -245,7 +245,7 @@
     
     <div id="settingsModal" class="modal">
         <div class="modal-content" style="max-width: 300px;">
-            <h2>⚙️ 系统设置与管理</h2>
+            <h2>⚙️ 设置与管理</h2>
             <div id="settingsGrid" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
                 <button id="modalEditMenuBtn" style="padding: 15px; background-color: #f7f7f7; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;">✏️ 编辑菜单</button>
                 <button id="modalIncomeSummaryBtn" style="padding: 15px; background-color: #f7f7f7; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;">💰 收入汇总</button>
@@ -317,13 +317,13 @@
                             tableOrders.set(tableNum, orderData);
                         }
                     }
-                    console.log("数据从云端加载成功。");
+                    console.log("加载成功。");
                 } else {
                     console.warn("云端数据结构不完整或为空，使用默认结构。", data);
                 }
             } catch (error) {
                 console.error("加载云端数据失败，使用本地默认数据。", error);
-                alert("云端数据加载失败！请检查 JSONBin 配置或网络。");
+                alert("加载失败！请检查 网络。");
             }
         }
 
@@ -358,14 +358,14 @@
                 }
                 
                 const result = await response.json();
-                console.log("数据已成功同步到云端。", result);
+                console.log("已成功同步。", result);
                 if (saveIndicator) {
                     saveIndicator.textContent = '✅ 已同步';
                     setTimeout(() => saveIndicator.textContent = '', 2000);
                 }
                 return true;
             } catch (error) {
-                console.error("保存云端数据失败。", error);
+                console.error("保存数据失败。", error);
                 alert("数据保存失败！请检查 JSONBin 配置或网络。");
                 if (saveIndicator) {
                     saveIndicator.textContent = '❌ 保存失败';
@@ -779,3 +779,4 @@
     </script>
 </body>
 </html>
+
