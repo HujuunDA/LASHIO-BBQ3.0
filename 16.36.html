@@ -2,8 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>高级采购管理 (Ks) - 云同步版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"> <title>采购管理- 云同步版</title>
     <style>
         /* 1. 全局和字体设置 (Clear and Minimal) */
         body {
@@ -11,6 +10,8 @@
             margin: 0;
             background-color: #f7f7f7; /* 浅灰色背景 */
             color: #1c1c1e; /* 深色文字 */
+            /* 🌟 修复：解决 Safari 输入框放大问题 */
+            -webkit-text-size-adjust: 100%;
         }
         
         /* 🌟 新增：头部导航栏样式 */
@@ -142,7 +143,7 @@
             display: flex;
             align-items: center;
             flex-grow: 1;
-            font-size: 20px; /* MODIFIED: Increased font size for product name */
+            font-size: 16px;
             color: #1c1c1e;
         }
         
@@ -206,7 +207,8 @@
             padding: 10px;
             border: 1px solid #d1d1d6;
             border-radius: 8px;
-            font-size: 15px;
+            /* 🌟 修复：提高字体大小，防止 Safari 自动缩放 */
+            font-size: 16px; 
             box-sizing: border-box;
             background-color: #ffffff; 
             min-height: 40px; /* 统一高度 */
@@ -256,11 +258,6 @@
             border-bottom: 2px solid #d1d1d6;
         }
         
-        /* 🌟 新增：购物车商品名称字体大小 */
-        .cart-item-row .item-name {
-            font-size: 20px; /* MODIFIED: Increased font size for cart item name */
-        }
-
         .cart-item-row.purchased td {
             color: #aeaeb2; 
             background-color: transparent;
@@ -275,7 +272,8 @@
             border: 1px solid #d1d1d6;
             border-radius: 6px;
             text-align: right;
-            font-size: 15px;
+            /* 🌟 修复：提高字体大小，防止 Safari 自动缩放 */
+            font-size: 16px; 
             background-color: #f9f9f9; 
             -webkit-appearance: none; 
             appearance: none;
@@ -355,17 +353,17 @@
 <body>
 
 <div class="header-bar">
-    <h1>🛒 高级采购管理 (Ks)</h1>
+    <h1>🛒 采购管理</h1>
     <button class="back-button" onclick="goToOrderingPage()">返回点单</button>
 </div>
 <div id="loading-overlay">
-    正在从云端加载采购清单... 🚀
+    正在加载采购清单... 🚀
 </div>
 
 <div class="container">
     <div class="tabs" id="tab-controls">
         <button class="tab-button active" data-tab="product-tab" onclick="openTab(event, 'product-tab')">🛍️ 选品清单</button>
-        <button class="tab-button" data-tab="cart-tab" onclick="openTab(event, 'cart-tab')">📋 结算购物车</button>
+        <button class="tab-button" data-tab="cart-tab" onclick="openTab(event, 'cart-tab')">📋 采购清单</button>
     </div>
 
     <div id="product-tab" class="tab-content active">
@@ -373,11 +371,11 @@
             </div>
         
         <div class="checkout-bar">
-            <button onclick="addSelectedToCart()">✅ 加入购物车并前往结算</button>
+            <button onclick="addSelectedToCart()">✅ 加入采购清单</button>
         </div>
         
         <div class="add-new-control">
-            <input type="text" id="new-product-input" placeholder="添加新的采购项到清单"> 
+            <input type="text" id="new-product-input" placeholder="添加新采购清单"> 
             <select id="new-product-category">
                 </select>
             <button class="add-to-list-button" onclick="addNewProductToList()">添加到清单</button>
@@ -452,6 +450,19 @@
         '油': '调料/酱料 🧂🧄', '葱': '调料/酱料 🧂🧄', '蒜': '调料/酱料 🧂🧄',
         '盐': '调料/酱料 🧂🧄', '姜': '调料/酱料 🧂🧄',
     };
+
+    // --- Debounce Utility 🌟 新增：性能优化 ---
+    function debounce(fn, wait) {
+        let timeout;
+        const debounced = function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn.apply(context, args), wait);
+        };
+        // 允许外部访问和清除 timeout
+        debounced.timeout = null; 
+        return debounced;
+    }
 
     // --- 实用工具函数 (保持不变) ---
     function parseFormattedPrice(formattedString) {
@@ -603,7 +614,10 @@
             alert("警告：数据保存到云端失败！请检查网络连接或 Master Key 是否有写入权限。");
         }
     }
-    
+
+    // 🌟 性能优化：创建防抖版本的保存函数 (500ms 延迟)
+    const debouncedSaveProductsToCloud = debounce(saveProductsToCloud, 500);
+
     // --- 🌟 修复后的函数：返回点单页面函数 ---
     function goToOrderingPage() {
         try {
@@ -716,6 +730,9 @@
             const oldIndex = list.indexOf(oldName);
             
             if (oldIndex !== -1) {
+                // 🌟 新增：震动反馈
+                if (navigator.vibrate) { navigator.vibrate(50); }
+
                 list[oldIndex] = trimmedNewName;
                 sortCategory(category);
                 
@@ -740,6 +757,9 @@
             const oldIndex = list.indexOf(name);
             
             if (oldIndex !== -1) {
+                // 🌟 新增：震动反馈
+                if (navigator.vibrate) { navigator.vibrate(50); }
+                
                 list.splice(oldIndex, 1);
                 
                 cloudData.cartData = cloudData.cartData.filter(item => item.name !== name);
@@ -796,6 +816,9 @@
             return;
         }
         
+        // 🌟 新增：震动反馈
+        if (navigator.vibrate) { navigator.vibrate(50); }
+        
         await saveProductsToCloud(); 
         
         renderCart();
@@ -833,7 +856,10 @@
         cloudData.productTemplate[targetCategoryKey].push(itemName);
          
         sortCategory(targetCategoryKey); 
-         
+        
+        // 🌟 新增：震动反馈
+        if (navigator.vibrate) { navigator.vibrate(50); }
+
         await saveProductsToCloud();
          
         renderProductList(); 
@@ -860,9 +886,6 @@
         
         const cartItems = cloudData.cartData; 
 
-        // 🌟 MODIFIED: 对购物车项目按名称进行中文(拼音)排序
-        cartItems.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
-
         if (cartItems.length === 0) {
             tableHtml = `<tr><td colspan="3" style="text-align: center; padding: 20px; color:#8e8e93;">购物车是空的，请在选品清单中勾选！</td></tr>`;
         } else {
@@ -887,7 +910,7 @@
                                 placeholder="0" 
                                 inputmode="numeric" 
                                 pattern="[0-9]*"
-                                onchange="updateItemPrice(${index}, this.value, this)">
+                                oninput="updateItemPrice(${index}, this.value, this)">
                         </td>
                     </tr>
                 `;
@@ -897,20 +920,26 @@
         calculateTotalCost();
     }
     
-    // *** 核心修复 V8：采用 onchange 事件处理价格更新 ***
-    async function updateItemPrice(index, rawValueString, inputElement) {
+    // *** 核心修复 V8：采用 oninput 事件处理价格更新 + Debounce ***
+    function updateItemPrice(index, rawValueString, inputElement) {
         // 1. 解析输入值
         const rawValue = parseFormattedPrice(rawValueString);
         const cartItems = cloudData.cartData;
+        const oldValue = cartItems[index].price;
 
         // 2. 确定状态
         const isPurchased = (rawValue !== '' && rawValue > 0);
+        
+        // 🌟 新增：震动反馈 (只在价格实际变动时)
+        if (navigator.vibrate && oldValue !== rawValue) { 
+            navigator.vibrate(50); 
+        }
         
         // 3. 更新底层数据
         cartItems[index].price = rawValue; 
         cartItems[index].purchased = isPurchased;
         
-        // 4. 更新行样式和复选框状态
+        // 4. 更新行样式和复选框状态 (即时更新 DOM)
         const row = inputElement.closest('.cart-item-row');
         if (row) {
             row.classList.toggle('purchased', isPurchased);
@@ -918,16 +947,20 @@
         }
 
         calculateTotalCost(); 
-        await saveProductsToCloud();
+        // 🌟 性能提升：改为防抖保存
+        debouncedSaveProductsToCloud(); 
     }
 
-    async function togglePurchased(index) {
+    function togglePurchased(index) {
         const cartItems = cloudData.cartData;
         const currentCheckbox = event.target; 
         const isChecked = currentCheckbox.checked;
         const row = currentCheckbox.closest('.cart-item-row');
         const priceInput = row.querySelector('.price-input');
         
+        // 🌟 新增：震动反馈
+        if (navigator.vibrate) { navigator.vibrate(50); }
+
         cartItems[index].purchased = isChecked;
 
         if (!isChecked) {
@@ -940,7 +973,8 @@
         
         row.classList.toggle('purchased', isChecked);
         
-        await saveProductsToCloud(); 
+        // 🌟 性能提升：改为防抖保存
+        debouncedSaveProductsToCloud(); 
     }
 
     function calculateTotalCost() {
@@ -960,6 +994,7 @@
     }
     
     async function copyCartSummary() {
+        // ... (保持不变) ...
         const now = new Date();
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -969,8 +1004,6 @@
         let summaryText = `📅 ${todayDate} 采购总结:\n\n`; 
         let hasPurchasedItems = false;
         const cartItems = cloudData.cartData;
-        
-        // 注意：这里不需要再次排序，因为 renderCart 已经排好序
         
         for (let i = 0; i < cartItems.length; i++) {
             const item = cartItems[i];
@@ -1019,6 +1052,12 @@
         }
 
         if (confirm(`确定要清空 ${purchasedItems.length} 个已完成的项目吗？`)) {
+            // 🌟 确保在同步保存前取消所有挂起的防抖保存
+            clearTimeout(debouncedSaveProductsToCloud.timeout);
+            
+            // 🌟 新增：震动反馈
+            if (navigator.vibrate) { navigator.vibrate(50); }
+            
             cloudData.cartData = cartItems.filter(item => !item.purchased);
             
             await saveProductsToCloud(); 
