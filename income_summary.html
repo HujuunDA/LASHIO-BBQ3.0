@@ -187,7 +187,7 @@
 
     <div class="container">
         <div class="header-bar">
-            <span>💰 今日财务汇总</span>
+            <span>💰 财务汇总 (当日统计)</span>
             <button class="header-button" onclick="goToOrderingPage()">返回点单</button>
         </div>
         
@@ -217,10 +217,10 @@
         
         <div class="closed-orders-section">
             <div class="section-title">
-                🟢 今日已结算记录 (按最新排序)
+                🟢 所有历史结算记录 (按最新排序)
             </div>
             <div id="closedOrdersList">
-                <div class="no-pending">今日暂无已结算记录。</div>
+                <div class="no-pending">暂无已结算记录。</div>
             </div>
             <button class="clear-income-btn" onclick="clearAllIncome()">清空所有收入记录 (累计历史数据)</button>
         </div>
@@ -280,22 +280,17 @@
                 if (!globalCloudData.income_data) globalCloudData.income_data = { total: 0, closedOrders: [] };
                 if (!globalCloudData.purchase_data) globalCloudData.purchase_data = { productTemplate: {}, cartData: [] };
 
-                // ****** 核心修复点 START ******
-                // 确保时间戳是数字，以应对 index.html 存储格式不一致的问题
+                // 核心修复点：确保时间戳是数字
                 if (globalCloudData.income_data.closedOrders && Array.isArray(globalCloudData.income_data.closedOrders)) {
                     globalCloudData.income_data.closedOrders.forEach(order => {
-                        // 如果 timestamp 是字符串，尝试转换成数字
                         if (typeof order.timestamp === 'string') {
                             order.timestamp = new Date(order.timestamp).getTime();
                         } 
-                        // 如果转换后不是数字，或者原本就不是数字，并且不是 null/undefined，则尝试解析为整数
                         if (typeof order.timestamp !== 'number' || isNaN(order.timestamp)) {
-                             // 尝试将它解析为整数（以防它是一个数字字符串）
                              order.timestamp = parseInt(order.timestamp, 10) || 0; 
                         }
                     });
                 }
-                // ****** 核心修复点 END ******
 
 
                 // 转换 table_orders 为 Map
@@ -417,7 +412,7 @@
             const date = new Date(record.timestamp);
             // 确保时间戳是有效数字
             const timeString = isNaN(date.getTime()) ? '时间未知' : 
-                               `${date.getMonth() + 1}-${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+                               `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
             headerText = `桌号 ${record.table} - 结算时间: ${timeString}`;
         } else {
             headerText = `桌号：${record.table}号桌`;
@@ -443,7 +438,7 @@
         `;
     }
 
-    // --- 渲染逻辑 (固定为当日统计) ---
+    // --- 渲染逻辑 (统计当日，列表显示所有) ---
     function renderSummary() {
         const incomeData = globalCloudData.income_data;
         const midnight = getTodayMidnightTimestamp(); // 获取今天零点时间戳
@@ -474,18 +469,25 @@
         }
 
 
-        // 2. 筛选今日已结算记录
-        // 关键：筛选出 timestamp >= 今天午夜的记录，实现只统计当天数据
-        const filteredClosedOrders = incomeData.closedOrders.filter(order => order.timestamp >= midnight);
-        // 计算当日总收入
-        const totalDailyIncome = filteredClosedOrders.reduce((sum, order) => sum + order.total, 0);
+        // 2. 筛选今日已结算记录（仅用于统计面板）
+        const todayClosedOrders = incomeData.closedOrders.filter(order => order.timestamp >= midnight);
+        const totalDailyIncome = todayClosedOrders.reduce((sum, order) => sum + order.total, 0);
         
-        // 3. 渲染已结算列表
+        // 3. 渲染汇总面板
+        document.getElementById('totalIncome').textContent = totalDailyIncome.toLocaleString();
+        document.getElementById('closedOrdersCount').textContent = todayClosedOrders.length;
+        document.getElementById('pendingOrdersCount').textContent = pendingTableCount; 
+
+        // 4. 渲染所有历史结算列表
         let closedOrdersListHTML = '';
         const closedOrdersListContainer = document.getElementById('closedOrdersList');
         
-        if (filteredClosedOrders.length > 0) {
-            const reversedOrders = [...filteredClosedOrders].reverse(); // 按时间倒序显示
+        // *** 核心修改：使用所有历史记录 for 列表显示 ***
+        const allClosedOrders = incomeData.closedOrders;
+
+        if (allClosedOrders.length > 0) {
+            // 仍然按时间倒序显示，但基于所有记录
+            const reversedOrders = [...allClosedOrders].reverse(); 
             
             reversedOrders.forEach(filteredRecord => {
                 // 关键：找到 filteredRecord 在【原始】closedOrders 数组中的索引 (用于删除)
@@ -505,13 +507,8 @@
             });
             closedOrdersListContainer.innerHTML = closedOrdersListHTML;
         } else {
-            closedOrdersListContainer.innerHTML = '<div class="no-pending">今日暂无已结算记录。</div>';
+            closedOrdersListContainer.innerHTML = '<div class="no-pending">暂无已结算记录。</div>';
         }
-
-        // 4. 渲染汇总面板
-        document.getElementById('totalIncome').textContent = totalDailyIncome.toLocaleString();
-        document.getElementById('closedOrdersCount').textContent = filteredClosedOrders.length;
-        document.getElementById('pendingOrdersCount').textContent = pendingTableCount; 
     }
     
     // --- 业务逻辑：单条删除功能 (云端同步) ---
