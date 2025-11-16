@@ -12,7 +12,7 @@
             font-family: Arial, sans-serif; 
             background-color: #f4f4f4; 
             padding-bottom: 60px; 
-            /* 🌟 解决输入框自动缩放问题 */
+            /* 解决输入框自动缩放问题 */
             -webkit-text-size-adjust: 100%;
         } 
         .top-nav { 
@@ -55,7 +55,7 @@
             font-weight: bold; 
         }
         
-        /* 新增: 备注输入框样式 (🌟 字体改为 16px 解决自动缩放问题) */
+        /* 新增: 备注输入框样式 (字体改为 16px 解决自动缩放问题) */
         #table-notes-input {
             flex-grow: 1; /* 占据剩余的大部分空间 */
             padding: 8px;
@@ -91,7 +91,15 @@
             font-weight: bold; 
             font-size: 16px; 
         }
-        .menu-item { display: flex; justify-content: space-between; align-items: center; background-color: white; padding: 15px 10px; border-bottom: 1px solid #eee; }
+        .menu-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background-color: white; 
+            padding: 15px 10px; 
+            border-bottom: 1px solid #eee; 
+            cursor: pointer; /* 🌟 提示用户整个行可点击 */
+        }
         .item-info .name { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
         .item-info .price { font-size: 14px; color: #666; }
         .quantity-control { display: flex; align-items: center; }
@@ -108,7 +116,7 @@
             cursor: pointer; 
             padding: 0; 
             box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); 
-            touch-action: manipulation; /* 🌟 优化快速点击，防止缩放 */
+            touch-action: manipulation; /* 优化快速点击，防止缩放 */
         }
         .control-btn.add { 
             background-color: #FF4500; 
@@ -153,15 +161,14 @@
         .table-number-btn.selected.occupied { background-color: #FF8C00; border-color: #FF4500; }
         .close-btn { background-color: #FF4500; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
         .order-modal-content { background-color: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); text-align: left; }
-        /* 🌟 修改: 订单操作栏布局，实现结算靠左，清空/关闭靠右 */
+        /* 订单操作栏布局 */
         .order-actions { 
             display: flex; 
-            justify-content: space-between; /* 关键：左中右布局 */
+            justify-content: space-between; 
             align-items: center;
-            margin-top: 15px; /* 增加一点间距 */
+            margin-top: 15px; 
         }
         .order-actions button { 
-            /* 移除 flex-grow: 1，让按钮按内容大小显示 */
             padding: 12px 15px; 
             border: none; 
             border-radius: 5px; 
@@ -440,6 +447,7 @@
             }
         }
         
+        // 渲染菜单 (MODIFIED)
         function renderMenu() {
             const { latestMenu, categories } = getLatestMenuStructure();
             menuContainer.innerHTML = '';
@@ -462,12 +470,13 @@
                     
                     const itemDiv = document.createElement('div');
                     itemDiv.className = 'menu-item';
+                    itemDiv.setAttribute('data-id', item.id); // 🌟 关键：给整个菜单项添加ID
                     itemDiv.innerHTML = `
                         <div class="item-info">
                             <div class="name">${item.name}</div>
                             <div class="price">${item.price.toLocaleString()} Ks</div>
                         </div>
-                        <div class="quantity-control ${quantity === 0 ? 'hidden' : ''}" data-id="${item.id}">
+                        <div class="quantity-control ${quantity === 0 ? 'hidden' : ''}">
                             <button class="control-btn minus-btn" data-id="${item.id}">-</button>
                             <span class="quantity">${quantity}</span>
                             <button class="control-btn add add-btn" data-id="${item.id}">+</button>
@@ -476,25 +485,45 @@
                     menuContainer.appendChild(itemDiv);
                 });
             });
-            bindMenuButtons();
+            // 不再需要在这里调用 bindMenuButtons，因为我们使用事件委托 (见 bindMenuInteractions)
         }
+        
+        // 🌟 新增/修改: 集中处理菜单交互 (事件委托)
+        function bindMenuInteractions() {
+            menuContainer.addEventListener('click', async (e) => {
+                if (currentTableNumber === null) {
+                    alert('请先选择桌号！');
+                    renderTableGrid();
+                    showModal(tableModal);
+                    return;
+                }
 
-        function bindMenuButtons() {
-            document.querySelectorAll('.control-btn').forEach(button => {
-                button.onclick = async (e) => {
-                    if (currentTableNumber === null) {
-                        alert('请先选择桌号！');
-                        renderTableGrid();
-                        showModal(tableModal);
-                        return;
+                let target = e.target;
+                let itemId = null;
+                let change = 0;
+
+                // 1. 处理 +/- 按钮点击 (减号只应该在这里处理)
+                if (target.classList.contains('control-btn')) {
+                    // 🌟 关键：阻止事件冒泡到父级菜单项，避免一次点击导致两次增加 (如果点了+)
+                    e.stopPropagation(); 
+                    itemId = target.getAttribute('data-id');
+                    change = target.classList.contains('add') ? 1 : -1;
+                } 
+                // 2. 处理菜单项行点击 (名称, 价格, 空白处)
+                else {
+                    const menuItem = target.closest('.menu-item');
+                    if (menuItem) {
+                        itemId = menuItem.getAttribute('data-id');
+                        change = 1; // 整个行点击默认是 +1
                     }
-                    
-                    const id = e.target.getAttribute('data-id');
-                    const change = e.target.classList.contains('add') ? 1 : -1;
-                    await updateQuantity(id, change);
-                };
+                }
+                
+                if (itemId && change !== 0) {
+                    await updateQuantity(itemId, change);
+                }
             });
         }
+
 
         // 更新数量逻辑 
         async function updateQuantity(id, change) {
@@ -725,6 +754,9 @@
                     hideModal(settingsModal);
                 }
             }
+            
+            // 🌟 新增：绑定菜单行点击交互（只绑定一次）
+            bindMenuInteractions();
         }
         
         // 页面启动 (这里是关键！确保只有初始化操作)
