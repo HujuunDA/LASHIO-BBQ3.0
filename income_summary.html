@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>收入汇总 (当日统计)</title>
+    <title>收入汇总</title>
     <style>
         body {
             font-family: 'Helvetica Neue', Arial, sans-serif;
@@ -183,7 +183,7 @@
     </style>
 </head>
 <body>
-    <div id="loading-overlay" style="display: flex;"> 正在从云端加载数据... 🚀 </div>
+    <div id="loading-overlay" style="display: flex;"> 加载数据... 🚀 </div>
 
     <div class="container">
         <div class="header-bar">
@@ -202,13 +202,13 @@
             </div>
             <div class="summary-card">
                 <div class="summary-value red" id="pendingOrdersCount">0</div>
-                <div class="summary-label">未结算桌数 (当前)</div>
+                <div class="summary-label">未结算桌数 </div>
             </div>
         </div>
 
         <div class="order-list-section">
             <div class="section-title">
-                🔴 待结算桌号 (当前订单详情)
+                🔴 待结算订单
             </div>
             <div id="pendingOrdersList">
                 <div class="no-pending">当前没有正在进行中的订单。</div>
@@ -217,7 +217,7 @@
         
         <div class="closed-orders-section">
             <div class="section-title">
-                🟢 所有历史结算记录 (按最新排序)
+                🟢 历史结算记录
             </div>
             <div id="closedOrdersList">
                 <div class="no-pending">暂无已结算记录。</div>
