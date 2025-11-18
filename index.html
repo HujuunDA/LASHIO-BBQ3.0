@@ -160,30 +160,7 @@
         .table-number-btn.selected { background-color: #FF8C00; color: white; border-color: #FF4500; } 
         .table-number-btn.selected.occupied { background-color: #FF8C00; border-color: #FF4500; }
         .close-btn { background-color: #FF4500; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        
-        /* --- 修复订单滚动问题 START --- */
-        .order-modal-content { 
-            background-color: white; 
-            padding: 20px; 
-            border-radius: 10px; 
-            width: 90%; 
-            max-width: 500px; 
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); 
-            text-align: left; 
-            max-height: 80vh; /* 限制模态框内容最大为视口高度的 80% */
-            display: flex; /* 启用 flex 布局 */
-            flex-direction: column; /* 垂直排列子元素 */
-            overflow: hidden; /* 防止整个内容框出现滚动条 */
-        }
-        
-        #orderDetailsContent {
-            flex-grow: 1; /* 允许它占据剩余空间 */
-            overflow-y: auto; /* 关键：当内容溢出时显示垂直滚动条 */
-            margin-bottom: 15px; /* 与底部总计/按钮保持间距 */
-            padding-right: 5px; /* 留出一点空间，以防滚动条太靠近文本 */
-        }
-        /* --- 修复订单滚动问题 END --- */
-        
+        .order-modal-content { background-color: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); text-align: left; }
         /* 订单操作栏布局 */
         .order-actions { 
             display: flex; 
@@ -742,8 +719,9 @@
                 const currentOrderData = tableOrders.get(currentTableNumber);
                 currentOrderData.notes = tableNotesInput.value.trim();
                 
-                // 【优化点】：删除了冗余的 if (!tableOrders.has(currentTableNumber)) 检查。
-                // selectNewTable 函数已确保该 Map 条目存在。
+                if (!tableOrders.has(currentTableNumber)) {
+                    tableOrders.set(currentTableNumber, { items: [], notes: currentOrderData.notes });
+                }
 
                 debouncedSaveCloudData(); 
                 renderTableGrid(); 
@@ -801,3 +779,4 @@
     </script>
 </body>
 </html>
+
