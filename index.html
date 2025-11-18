@@ -159,6 +159,7 @@
         .table-number-btn.occupied { background-color: #4CAF50; color: white; border-color: #45a049; } 
         .table-number-btn.selected { background-color: #FF8C00; color: white; border-color: #FF4500; } 
         .table-number-btn.selected.occupied { background-color: #FF8C00; border-color: #FF4500; }
+        .close-btn { background-color: #FF4500; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
         
         /* --- 修复订单滚动问题 START --- */
         .order-modal-content { 
@@ -183,7 +184,6 @@
         }
         /* --- 修复订单滚动问题 END --- */
         
-        .close-btn { background-color: #FF4500; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
         /* 订单操作栏布局 */
         .order-actions { 
             display: flex; 
@@ -742,9 +742,8 @@
                 const currentOrderData = tableOrders.get(currentTableNumber);
                 currentOrderData.notes = tableNotesInput.value.trim();
                 
-                if (!tableOrders.has(currentTableNumber)) {
-                    tableOrders.set(currentTableNumber, { items: [], notes: currentOrderData.notes });
-                }
+                // 【优化点】：删除了冗余的 if (!tableOrders.has(currentTableNumber)) 检查。
+                // selectNewTable 函数已确保该 Map 条目存在。
 
                 debouncedSaveCloudData(); 
                 renderTableGrid(); 
