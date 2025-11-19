@@ -2,569 +2,289 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>收入汇总</title>
     <style>
-        body {
-            font-family: 'Helvetica Neue', Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f7f7f7;
-            color: #333;
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: #f7f7f7; padding-bottom: 60px; -webkit-text-size-adjust: 100%; touch-action: manipulation; }
+        
+        .header-bar { 
+            background: #FF8C00; color: white; padding: 15px 20px; 
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 12px rgba(255,140,0,0.2);
+            position: sticky; top: 0; z-index: 10;
         }
+        .header-bar h2 { margin: 0; font-size: 20px; font-weight: 700; }
+        .back-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 15px; border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 14px; }
+        .back-btn:active { background: rgba(255,255,255,0.4); }
 
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #fff;
-            min-height: 100vh;
-            padding-bottom: 20px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        /* 仪表盘卡片 */
+        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; margin-top: 0; }
+        .card { background: white; padding: 20px; border-radius: 16px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .card.big { grid-column: span 2; background: linear-gradient(135deg, #fff, #fff8f0); border: 1px solid #ffe0b2; }
+        
+        .val { font-size: 24px; font-weight: 800; color: #FF4500; margin-bottom: 5px; }
+        .val.big { font-size: 32px; }
+        .label { font-size: 13px; color: #888; font-weight: 500; }
+
+        /* 列表区域通用样式 */
+        .section-title { padding: 0 20px; margin-top: 20px; font-size: 18px; font-weight: 700; color: #333; display: flex; align-items: center; justify-content: space-between; }
+        .order-list { padding: 15px 20px; }
+        
+        .order-card { 
+            background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03); position: relative;
+            transition: transform 0.2s;
         }
+        
+        /* 待结算特有样式 (区分颜色) */
+        .pending-card { border-left: 5px solid #FF4500; background: #fffcfc; }
+        .pending-badge { background: #FF4500; color: white; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: bold; }
 
-        /* --- 顶部栏 --- */
-        .header-bar {
-            background-color: #FF8C00; /* 统一为橙色主题 */
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 1.5em;
-            font-weight: bold;
-        }
+        /* 已结算特有样式 */
+        .history-card { border-left: 5px solid #4CAF50; }
+        .history-badge { background: #4CAF50; color: white; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: bold; }
 
-        .header-button {
-            background: #FF4500; /* 统一为橙红色 */
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 5px;
+        .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed #eee; }
+        .time { font-size: 13px; color: #999; }
+        
+        .items { font-size: 15px; color: #555; line-height: 1.6; margin-bottom: 10px; }
+        .item-row { display: flex; justify-content: space-between; }
+        
+        .total-row { display: flex; justify-content: space-between; margin-top: 10px; font-weight: 800; font-size: 17px; color: #333; border-top: 1px solid #f5f5f5; padding-top: 10px; }
+        
+        .delete-single-btn { 
+            background: #ffebee; color: #d32f2f; 
+            border: 1px solid #ffcdd2;
+            padding: 6px 12px; 
+            border-radius: 6px; 
+            font-size: 13px; 
+            font-weight: 600; 
             cursor: pointer;
-            font-weight: bold;
             margin-left: 10px;
         }
+        .delete-single-btn:active { background: #ef5350; color: white; }
 
-        /* --- 汇总面板 --- */
-        .summary-panel {
-            display: flex;
-            justify-content: space-around;
-            padding: 20px 0;
-            background-color: #ffe4b5; /* 浅橙色背景 */
-            border-bottom: 2px solid #FF8C00;
-        }
-
-        .summary-card {
-            text-align: center;
-            flex: 1;
-            padding: 10px 5px;
-            border-right: 1px solid #ffaa55;
-        }
+        .clear-all { display: block; width: 90%; margin: 30px auto; padding: 15px; background: #eee; color: #666; border: none; border-radius: 12px; font-weight: 600; font-size: 15px; cursor: pointer; }
         
-        .summary-card:last-child {
-            border-right: none;
-        }
+        .empty-tip { text-align: center; color: #bbb; padding: 20px; font-size: 14px; background: #fff; border-radius: 12px; margin: 10px 20px; border: 1px dashed #ddd; }
 
-        .summary-value {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #FF4500; /* 橙红色 */
-            margin-bottom: 5px;
-        }
-        
-        .summary-value.red {
-            color: #d85050; 
-        }
-
-        .summary-label {
-            font-size: 0.8em;
-            color: #666;
-        }
-
-        /* --- 订单列表 --- */
-        .order-list-section {
-            padding: 20px;
-        }
-
-        .section-title {
-            font-size: 1.3em;
-            font-weight: bold;
-            color: #333;
-            margin-bottom: 15px;
-            border-bottom: 2px solid #f0f0f0;
-            padding-bottom: 5px;
-        }
-
-        /* --- 通用订单项样式 (用于待结算和已结算) --- */
-        .order-item-card {
-            border-radius: 5px;
-            margin-bottom: 15px;
-            padding: 10px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-            position: relative; /* 为删除按钮定位 */
-        }
-
-        .order-header-info {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid #fcc;
-            padding-bottom: 5px;
-            margin-bottom: 5px;
-        }
-        
-        .order-table {
-            font-size: 1.2em;
-            font-weight: bold;
-            color: #FF8C00; /* 橙色 */
-        }
-
-        .order-total {
-            font-size: 1.4em;
-            font-weight: bold;
-            color: #FF4500; /* 橙红色 */
-        }
-
-        .order-details {
-            font-size: 0.9em;
-            color: #555;
-            padding: 5px 0;
-        }
-        
-        .detail-line {
-            display: flex;
-            justify-content: space-between;
-            line-height: 1.5;
-            border-bottom: 1px dotted #eee;
-        }
-        
-        .detail-line:last-child {
-            border-bottom: none;
-        }
-        
-        .clear-income-btn {
-            display: block;
-            width: 90%;
-            margin: 30px auto 10px;
-            padding: 12px;
-            background-color: #ff5722; 
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 1em;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        
-        .no-pending {
-            text-align: center;
-            color: #999;
-            padding: 30px 0;
-            font-size: 0.9em;
-        }
-        
-        /* 新增加载层样式 */
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); color: #FF8C00; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; z-index: 1000; transition: opacity 0.3s; }
-
-        /* 新增: 删除按钮样式 */
-        .delete-btn {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            background: #e6523f;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            padding: 3px 6px;
-            font-size: 0.7em;
-            cursor: pointer;
-            opacity: 0.8;
-        }
+        #saveIndicator { position: fixed; top: 70px; right: 20px; background: rgba(0,0,0,0.7); color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; z-index: 99; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        #saveIndicator.show { opacity: 1; }
     </style>
 </head>
 <body>
-    <div id="loading-overlay" style="display: flex;"> 加载数据... 🚀 </div>
+    <div id="saveIndicator">☁️ 已同步</div>
 
-    <div class="container">
-        <div class="header-bar">
-            <span>💰 财务汇总 (当日统计)</span>
-            <button class="header-button" onclick="goToOrderingPage()">返回点单</button>
-        </div>
-        
-        <div class="summary-panel">
-            <div class="summary-card">
-                <div class="summary-value" id="totalIncome">0</div>
-                <div class="summary-label">当日总收入 (Ks)</div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-value" id="closedOrdersCount">0</div>
-                <div class="summary-label">当日已结算订单数</div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-value red" id="pendingOrdersCount">0</div>
-                <div class="summary-label">未结算桌数 </div>
-            </div>
-        </div>
+    <header class="header-bar">
+        <h2>💰 营收报表</h2>
+        <button class="back-btn" onclick="window.location.href='index.html'">返回点单</button>
+    </header>
 
-        <div class="order-list-section">
-            <div class="section-title">
-                🔴 待结算订单
-            </div>
-            <div id="pendingOrdersList">
-                <div class="no-pending">当前没有正在进行中的订单。</div>
-            </div>
+    <div class="dashboard">
+        <div class="card big">
+            <div class="val big" id="todayIncome">0</div>
+            <div class="label">今日总收入 (Ks)</div>
         </div>
-        
-        <div class="closed-orders-section">
-            <div class="section-title">
-                🟢 历史结算记录
-            </div>
-            <div id="closedOrdersList">
-                <div class="no-pending">暂无已结算记录。</div>
-            </div>
-            <button class="clear-income-btn" onclick="clearAllIncome()">清空所有收入记录 (累计历史数据)</button>
+        <div class="card">
+            <div class="val" id="todayOrders">0</div>
+            <div class="label">今日单数</div>
         </div>
-
+        <div class="card">
+            <div class="val" id="pendingTablesCount" style="color: #FF4500;">0</div>
+            <div class="label">当前正在用餐</div>
+        </div>
     </div>
 
-<script>
-    // --- Cloud Sync Configuration (与 index.html 保持一致) ---
-    const JSONBIN_ID = '69174442ae596e708f5901ae'; 
-    const JSONBIN_MASTER_KEY = '$2a$10$ol9N5tLV0G2AnDYaF4sO4O2l0RoR8OSXagA4IUy2wiwdntZDuzRh2';
-    const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
+    <div class="section-title">
+        <span>🔥 待结算 (进行中)</span>
+    </div>
+    <div id="pendingList">
+        </div>
 
-    let globalCloudData = {
-        menu_data: [],
-        table_orders: {}, 
-        income_data: { total: 0, closedOrders: [] }, // closedOrders 存储所有历史记录
-        purchase_data: { productTemplate: {}, cartData: [] }
-    };
+    <div class="section-title" style="margin-top: 30px;">
+        <span>🧾 历史账单 (已结)</span>
+    </div>
+    <div class="order-list" id="historyList">
+        </div>
     
-    let tableOrders = new Map(); 
+    <button class="clear-all" onclick="clearAll()">🗑️ 清空所有历史记录 (慎用)</button>
 
-    // --- 日期工具函数 ---
-    /**
-     * 获取今天日期（YYYY-MM-DD）的午夜时间戳 (Local Time)
-     * @returns {number} 毫秒时间戳
-     */
-    function getTodayMidnightTimestamp() {
-        const now = new Date();
-        now.setHours(0, 0, 0, 0); 
-        return now.getTime();
-    }
-    
-    // --- Cloud Utilities ---
-    async function loadCloudData() {
-        document.getElementById('loading-overlay').style.display = 'flex';
-        try {
-            const response = await fetch(JSONBIN_URL + '/latest', {
-                method: 'GET',
-                headers: {
-                    'X-Master-Key': JSONBIN_MASTER_KEY,
-                    'Content-Type': 'application/json',
-                    'Cache-Control': 'no-cache' 
-                }
-            });
+    <script>
+        // --- 配置 ---
+        const JSONBIN_ID = '69174442ae596e708f5901ae'; 
+        const JSONBIN_MASTER_KEY = '$2a$10$ol9N5tLV0G2AnDYaF4sO4O2l0RoR8OSXagA4IUy2wiwdntZDuzRh2';
+        const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
+        const CACHE_KEY = 'bbq_app_local_cache'; 
+
+        let globalData = {};
+
+        function loadCache() { const c = localStorage.getItem(CACHE_KEY); return c ? JSON.parse(c) : null; }
+        function saveCache(data) { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }
+
+        async function init() {
+            const local = loadCache();
+            if (local) { globalData = local; render(); }
             
-            if (!response.ok) {
-                throw new Error(`云端加载失败: ${response.status} ${response.statusText}`);
+            try {
+                const res = await fetch(JSONBIN_URL + '/latest', { headers: { 'X-Master-Key': JSONBIN_MASTER_KEY } });
+                const json = await res.json();
+                if (json.record) {
+                    globalData = json.record;
+                    if(!globalData.income_data) globalData.income_data = { total: 0, closedOrders: [] };
+                    if(!globalData.table_orders) globalData.table_orders = {};
+                    saveCache(globalData);
+                    render();
+                }
+            } catch(e) { console.log("使用本地数据"); }
+        }
+
+        async function sync() {
+            const ind = document.getElementById('saveIndicator');
+            ind.textContent = "同步中..."; ind.classList.add('show');
+            saveCache(globalData);
+            try {
+                await fetch(JSONBIN_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
+                    body: JSON.stringify(globalData)
+                });
+                ind.textContent = "✅ 已同步";
+                setTimeout(() => ind.classList.remove('show'), 2000);
+            } catch(e) {
+                ind.textContent = "⚠️ 仅本地保存";
+                setTimeout(() => ind.classList.remove('show'), 3000);
             }
+        }
+
+        function render() {
+            const income = globalData.income_data || { total: 0, closedOrders: [] };
+            const tables = globalData.table_orders || {};
             
-            const data = await response.json();
+            // --- 1. 渲染待结算 (Pending) ---
+            const pendingContainer = document.getElementById('pendingList');
+            pendingContainer.innerHTML = '';
+            let activeTableCount = 0;
+
+            const pendingTables = Object.entries(tables).filter(([k, v]) => v.items && v.items.length > 0);
             
-            if (data.record) {
-                globalCloudData = data.record;
-                // 确保所有顶层属性都存在
-                if (!globalCloudData.menu_data) globalCloudData.menu_data = [];
-                if (!globalCloudData.table_orders) globalCloudData.table_orders = {};
-                if (!globalCloudData.income_data) globalCloudData.income_data = { total: 0, closedOrders: [] };
-                if (!globalCloudData.purchase_data) globalCloudData.purchase_data = { productTemplate: {}, cartData: [] };
-
-                // 核心修复点：确保时间戳是数字
-                if (globalCloudData.income_data.closedOrders && Array.isArray(globalCloudData.income_data.closedOrders)) {
-                    globalCloudData.income_data.closedOrders.forEach(order => {
-                        if (typeof order.timestamp === 'string') {
-                            order.timestamp = new Date(order.timestamp).getTime();
-                        } 
-                        if (typeof order.timestamp !== 'number' || isNaN(order.timestamp)) {
-                             order.timestamp = parseInt(order.timestamp, 10) || 0; 
-                        }
-                    });
-                }
-
-
-                // 转换 table_orders 为 Map
-                tableOrders = new Map();
-                for (const [tableNum, orderData] of Object.entries(globalCloudData.table_orders)) {
-                    if (Array.isArray(orderData)) {
-                         tableOrders.set(tableNum, { items: orderData, notes: '' });
-                    } else {
-                        if (!orderData.items) orderData.items = [];
-                        if (typeof orderData.notes !== 'string') orderData.notes = '';
-                        tableOrders.set(tableNum, orderData);
-                    }
-                }
-                console.log("数据从云端加载成功。");
+            if (pendingTables.length === 0) {
+                pendingContainer.innerHTML = '<div class="empty-tip">当前没有进行中的订单</div>';
             } else {
-                console.warn("云端数据结构不完整或为空，使用默认结构。", data);
+                pendingTables.forEach(([tableNum, data]) => {
+                    activeTableCount++;
+                    const total = data.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+                    
+                    // 详情只显示前3项，多了显示...
+                    let itemsHtml = data.items.slice(0, 5).map(i => `
+                        <div class="item-row">
+                            <span>${i.name} x${i.quantity}</span>
+                            <span style="color:#888;">${(i.price * i.quantity).toLocaleString()}</span>
+                        </div>
+                    `).join('');
+                    if (data.items.length > 5) itemsHtml += '<div style="color:#999; font-size:12px; text-align:center;">...更多菜品请在点单页查看</div>';
+
+                    const div = document.createElement('div');
+                    div.className = 'order-card pending-card'; // 使用特殊样式
+                    div.style.margin = "10px 20px"; // 特殊边距
+                    div.innerHTML = `
+                        <div class="order-header">
+                            <span class="pending-badge">桌号 ${tableNum}</span>
+                            <span style="color:#FF4500; font-weight:bold; font-size:13px;">进行中...</span>
+                        </div>
+                        <div class="items">
+                            ${itemsHtml}
+                            ${data.notes ? `<div style="margin-top:5px; color:#FF4500; font-style:italic;">备注: ${data.notes}</div>` : ''}
+                        </div>
+                        <div class="total-row">
+                            <span>当前消费</span>
+                            <span style="color:#FF4500">${total.toLocaleString()} Ks</span>
+                        </div>
+                    `;
+                    pendingContainer.appendChild(div);
+                });
             }
+            document.getElementById('pendingTablesCount').textContent = activeTableCount;
+
+
+            // --- 2. 渲染今日数据统计 ---
+            const todayStart = new Date().setHours(0,0,0,0);
+            const todayRecs = income.closedOrders.filter(r => new Date(r.timestamp).getTime() >= todayStart);
+            const todayTotal = todayRecs.reduce((sum, r) => sum + r.total, 0);
             
-            renderSummary();
-        } catch (error) {
-            console.error("加载云端数据失败。", error);
-            alert(`云端数据加载失败！请检查以下内容：\n1. 您的 JSONBin ID 和 Master Key 是否正确？\n2. 您的网络连接是否正常？\n错误信息: ${error.message}`);
+            document.getElementById('todayIncome').textContent = todayTotal.toLocaleString();
+            document.getElementById('todayOrders').textContent = todayRecs.length;
 
-            const loadingOverlay = document.getElementById('loading-overlay');
-            loadingOverlay.textContent = '❌ 数据加载失败！请检查配置或网络。';
-            loadingOverlay.style.backgroundColor = 'rgba(255, 230, 230, 0.9)';
-            loadingOverlay.style.color = '#FF4500';
-            setTimeout(() => {
-                loadingOverlay.style.display = 'none';
-            }, 5000); 
-        } finally {
-             document.getElementById('loading-overlay').style.display = 'none';
-        }
-    }
-    
-    async function saveCloudData() {
-        document.getElementById('loading-overlay').textContent = '正在同步到云端...';
-        document.getElementById('loading-overlay').style.display = 'flex';
 
-        const storableTableOrders = {};
-        for (const [tableNum, data] of tableOrders.entries()) {
-            if (data.items.length > 0 || data.notes) {
-                storableTableOrders[tableNum] = data;
-            }
-        }
-        globalCloudData.table_orders = storableTableOrders;
-        
-        try {
-            const response = await fetch(JSONBIN_URL, {
-                method: 'PUT',
-                headers: {
-                    'X-Master-Key': JSONBIN_MASTER_KEY,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(globalCloudData)
-            });
-
-            if (!response.ok) {
-                throw new Error(`云端保存失败: ${response.status} ${response.statusText}`);
-            }
+            // --- 3. 渲染历史列表 (History) ---
+            const historyContainer = document.getElementById('historyList');
+            historyContainer.innerHTML = '';
             
-            console.log("数据已成功同步到云端。");
-            return true;
-        } catch (error) {
-            console.error("保存云端数据失败。", error);
-            alert(`数据保存失败！请检查 JSONBin 配置或网络。\n错误信息: ${error.message}`);
-            return false;
-        } finally {
-             document.getElementById('loading-overlay').style.display = 'none';
-        }
-    }
+            const history = [...income.closedOrders].reverse();
+            
+            if(history.length === 0) {
+                historyContainer.innerHTML = '<div class="empty-tip">暂无已结算的订单</div>';
+                return;
+            }
 
-    // --- 实用函数 (保持不变) ---
-    function calculateOrderTotal(orderItems) {
-        return orderItems.reduce((total, item) => total + (item.price * item.quantity), 0);
-    }
-    
-    function calculateOrderSummary(orderData) {
-        const activeItems = orderData.items.filter(item => item.quantity > 0);
-        const total = calculateOrderTotal(activeItems);
-        
-        const details = activeItems.map(item => ({
-             name: item.name,
-             quantity: item.quantity,
-             price: item.price
-        }));
-        
-        return { total, details };
-    }
+            history.forEach((rec, reversedIndex) => {
+                const realIndex = income.closedOrders.length - 1 - reversedIndex;
+                const date = new Date(rec.timestamp);
+                const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
+                
+                let itemsHtml = '';
+                if (rec.items && rec.items.length > 0) {
+                    itemsHtml = rec.items.map(i => `
+                        <div class="item-row">
+                            <span>${i.name} x${i.quantity}</span>
+                            <span style="color:#888;">${(i.price * i.quantity).toLocaleString()}</span>
+                        </div>
+                    `).join('');
+                }
 
-    function createDetailedOrderHTML(record, isClosed, index = null) {
-        const itemsToDisplay = isClosed ? record.items : record.details;
-        
-        let detailsHTML = '';
-        if (itemsToDisplay && itemsToDisplay.length > 0) {
-            itemsToDisplay.forEach(item => {
-                const subtotal = (item.price * item.quantity);
-                detailsHTML += `
-                    <div class="detail-line">
-                        <span>${item.name} x ${item.quantity}</span>
-                        <span style="font-weight: bold;">${subtotal.toLocaleString()} Ks</span>
+                const div = document.createElement('div');
+                div.className = 'order-card history-card';
+                div.innerHTML = `
+                    <div class="order-header">
+                        <div>
+                            <span class="history-badge">桌号 ${rec.table}</span>
+                            <span class="time">${timeStr}</span>
+                        </div>
+                        <button class="delete-single-btn" onclick="deleteSingleOrder(${realIndex})">🗑 删除</button>
+                    </div>
+                    <div class="items">
+                        ${itemsHtml}
+                        ${rec.notes ? `<div style="margin-top:5px; color:#888; font-style:italic;">备注: ${rec.notes}</div>` : ''}
+                    </div>
+                    <div class="total-row">
+                        <span>总计</span>
+                        <span style="color:#4CAF50">${rec.total.toLocaleString()} Ks</span>
                     </div>
                 `;
+                historyContainer.appendChild(div);
             });
-        } else {
-             detailsHTML = '<div style="color:#aaa; text-align:center;">(无详细菜品记录)</div>';
-        }
-        
-        let notesHTML = '';
-        const notes = isClosed ? record.notes : record.notes; 
-        if (notes) {
-            notesHTML = `<div style="margin-top: 5px; font-style: italic; color: #FF4500;">备注: ${notes}</div>`;
-        }
-        
-        let headerText = '';
-        let totalDisplay = record.total.toLocaleString();
-        
-        if (isClosed) {
-            const date = new Date(record.timestamp);
-            // 确保时间戳是有效数字
-            const timeString = isNaN(date.getTime()) ? '时间未知' : 
-                               `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-            headerText = `桌号 ${record.table} - 时间: ${timeString}`;
-        } else {
-            headerText = `桌号：${record.table}号桌`;
         }
 
-        let deleteButton = '';
-        if (isClosed && index !== null) {
-            deleteButton = `<button class="delete-btn" onclick="deleteSingleOrder(${index})">删除</button>`;
-        }
-        
-        return `
-            <div class="order-item-card" style="background-color: ${isClosed ? '#f8fdf8' : '#fff4f4'}; border: 1px solid ${isClosed ? '#d4edda' : '#f5c6cb'};">
-                ${deleteButton}
-                <div class="order-header-info">
-                    <span class="order-table">${headerText}</span>
-                    <span class="order-total">${totalDisplay} Ks</span>
-                </div>
-                <div class="order-details">
-                   ${detailsHTML}
-                   ${notesHTML}
-                </div>
-            </div>
-        `;
-    }
-
-    // --- 渲染逻辑 (统计当日，列表显示所有) ---
-    function renderSummary() {
-        const incomeData = globalCloudData.income_data;
-        const midnight = getTodayMidnightTimestamp(); // 获取今天零点时间戳
-
-        // 1. 待结算桌号 (始终显示当前未结算的桌)
-        let pendingOrdersListHTML = '';
-        let pendingTableCount = 0;
-
-        tableOrders.forEach((orderData, tableNumber) => {
-            const summary = calculateOrderSummary(orderData);
-            if (summary.total > 0 || orderData.notes) { 
-                pendingTableCount++;
-                const record = { 
-                    table: tableNumber, 
-                    details: summary.details, 
-                    total: summary.total, 
-                    notes: orderData.notes || '' 
-                };
-                pendingOrdersListHTML += createDetailedOrderHTML(record, false);
+        window.deleteSingleOrder = async (index) => {
+            const rec = globalData.income_data.closedOrders[index];
+            if(confirm(`⚠️ 确定删除桌号 ${rec.table} 的历史记录吗？金额 ${rec.total.toLocaleString()} 将被扣除。`)) {
+                globalData.income_data.total -= rec.total;
+                if(globalData.income_data.total < 0) globalData.income_data.total = 0;
+                globalData.income_data.closedOrders.splice(index, 1);
+                render();
+                await sync();
             }
-        });
-        
-        const pendingOrdersListContainer = document.getElementById('pendingOrdersList');
-        if (pendingTableCount > 0) {
-            pendingOrdersListContainer.innerHTML = pendingOrdersListHTML;
-        } else {
-            pendingOrdersListContainer.innerHTML = '<div class="no-pending">当前没有正在进行中的订单。</div>';
-        }
+        };
 
-
-        // 2. 筛选今日已结算记录（仅用于统计面板）
-        const todayClosedOrders = incomeData.closedOrders.filter(order => order.timestamp >= midnight);
-        const totalDailyIncome = todayClosedOrders.reduce((sum, order) => sum + order.total, 0);
-        
-        // 3. 渲染汇总面板
-        document.getElementById('totalIncome').textContent = totalDailyIncome.toLocaleString();
-        document.getElementById('closedOrdersCount').textContent = todayClosedOrders.length;
-        document.getElementById('pendingOrdersCount').textContent = pendingTableCount; 
-
-        // 4. 渲染所有历史结算列表
-        let closedOrdersListHTML = '';
-        const closedOrdersListContainer = document.getElementById('closedOrdersList');
-        
-        // *** 核心修改：使用所有历史记录 for 列表显示 ***
-        const allClosedOrders = incomeData.closedOrders;
-
-        if (allClosedOrders.length > 0) {
-            // 仍然按时间倒序显示，但基于所有记录
-            const reversedOrders = [...allClosedOrders].reverse(); 
-            
-            reversedOrders.forEach(filteredRecord => {
-                // 关键：找到 filteredRecord 在【原始】closedOrders 数组中的索引 (用于删除)
-                const originalIndex = incomeData.closedOrders.findIndex(originalRecord => 
-                    originalRecord.timestamp === filteredRecord.timestamp && 
-                    originalRecord.total === filteredRecord.total
-                );
-                
-                const normalizedRecord = {
-                    table: filteredRecord.table,
-                    items: filteredRecord.items, 
-                    notes: filteredRecord.notes,
-                    total: filteredRecord.total,
-                    timestamp: filteredRecord.timestamp
-                };
-                closedOrdersListHTML += createDetailedOrderHTML(normalizedRecord, true, originalIndex);
-            });
-            closedOrdersListContainer.innerHTML = closedOrdersListHTML;
-        } else {
-            closedOrdersListContainer.innerHTML = '<div class="no-pending">暂无已结算记录。</div>';
-        }
-    }
-    
-    // --- 业务逻辑：单条删除功能 (云端同步) ---
-    async function deleteSingleOrder(indexToDelete) {
-        // 此函数从 globalCloudData.income_data.closedOrders (全部历史记录) 中删除单条记录
-        if (indexToDelete === null || indexToDelete < 0 || indexToDelete >= globalCloudData.income_data.closedOrders.length) {
-            console.error("尝试删除无效索引的订单。", indexToDelete);
-            return;
-        }
-        
-        const record = globalCloudData.income_data.closedOrders[indexToDelete];
-        if (confirm(`确定要删除此笔收入记录吗？\n桌号: ${record.table}\n金额: ${record.total.toLocaleString()} Ks\n时间: ${new Date(record.timestamp).toLocaleString()}`)) {
-            
-            const deletedOrder = globalCloudData.income_data.closedOrders.splice(indexToDelete, 1)[0];
-            // 确保计算减去的是数字
-            globalCloudData.income_data.total = parseFloat(globalCloudData.income_data.total) - parseFloat(deletedOrder.total);
-            
-            const saved = await saveCloudData();
-            
-            if (saved) {
-                renderSummary();
-                alert("单条收入记录已删除并已同步到云端。");
-            } else {
-                globalCloudData.income_data.closedOrders.splice(indexToDelete, 0, deletedOrder);
-                globalCloudData.income_data.total = parseFloat(globalCloudData.income_data.total) + parseFloat(deletedOrder.total);
-                alert("删除失败，请检查网络连接。");
+        window.clearAll = async () => {
+            const pwd = prompt("❗ 警告：此操作将清空所有历史账单！\n请输入确认码 '8888' 继续：");
+            if(pwd === '8888') {
+                globalData.income_data = { total: 0, closedOrders: [] };
+                render();
+                await sync();
             }
-        }
-    }
-    
-    // --- 业务逻辑：清空所有收入 (云端同步) ---
-    async function clearAllIncome() {
-        if (confirm("警告！您确定要清空所有的收入记录吗？此操作不可撤销，会清除所有历史记录。")) {
-            
-            globalCloudData.income_data = { total: 0, closedOrders: [] }; // 清空所有记录
-            
-            const saved = await saveCloudData();
-            
-            if (saved) {
-                renderSummary();
-                alert("所有收入记录（包括历史数据）已清空并已同步到云端。");
-            } else {
-                alert("清空失败，请检查网络连接。");
-            }
-        }
-    }
-    
-    function goToOrderingPage() {
-        window.location.href = 'index.html';
-    }
+        };
 
-    document.addEventListener('DOMContentLoaded', () => {
-        loadCloudData();
-    });
-</script>
-
+        init();
+    </script>
 </body>
-
 </html>
