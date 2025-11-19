@@ -2,355 +2,293 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>编辑菜单</title>
     <style>
-        /* --- 烧烤橙色主题 CSS 修改 --- */
-        body { font-family: Arial, sans-serif; margin: 0; padding-top: 0; background-color: #f4f4f4; }
+        /* 全局流畅度优化 */
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding-top: 60px; background-color: #f4f4f4; -webkit-text-size-adjust: 100%; touch-action: manipulation; }
+        button:active { transform: scale(0.96); transition: transform 0.1s; }
+
+        /* 顶部栏 */
         .header-bar { 
-            background-color: #FF8C00; /* 主色：橙色 */
-            color: white; 
-            padding: 10px 20px; 
-            box-sizing: border-box; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 10;
+            background-color: #FF8C00; color: white; padding: 10px 15px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            position: fixed; top: 0; width: 100%; z-index: 10; box-sizing: border-box;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
-        .header-bar h2 { margin: 0; font-size: 1.2em; }
-        .header-bar button { 
-            background: #FF4500; /* 强调色：橙红色 */
-            color: white; 
-            border: none; 
-            padding: 8px 15px; 
-            border-radius: 5px; 
-            cursor: pointer; 
-            font-weight: bold; 
-            transition: background-color 0.2s;
-        }
-        .menu-list { padding: 20px; margin-top: 50px; } 
-        .add-item-btn { 
-            display: block; 
-            width: 90%; 
-            margin: 20px auto; 
-            padding: 15px; 
-            background-color: #FF8C00; 
-            color: white; 
-            border: none; 
-            border-radius: 8px; 
-            font-size: 1.1em; 
-            font-weight: bold; 
-            cursor: pointer; 
-            transition: background-color 0.2s; 
-        }
-        /* Modal Styles (保持橙色主题) */
-        .modal { display: none; position: fixed; z-index: 20; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.7); justify-content: center; align-items: center; }
-        .modal-content { background-color: #fefefe; padding: 25px; border-radius: 10px; width: 90%; max-width: 350px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); }
-        .modal-content h3 { color: #FF4500; margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .save-btn { background-color: #34c759; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        .cancel-btn { background-color: #ccc; color: #333; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .header-bar h2 { margin: 0; font-size: 18px; font-weight: 700; }
+        .header-bar button { background: rgba(255,255,255,0.2); color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; }
+
+        /* 列表区域 */
+        .menu-list { padding: 15px; padding-bottom: 80px; opacity: 0; transition: opacity 0.3s; }
+        .menu-list.loaded { opacity: 1; }
         
-        /* 新增加载层样式 */
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); color: #FF8C00; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; z-index: 1000; transition: opacity 0.3s; }
+        .category-block { margin-bottom: 20px; }
+        .category-title { font-size: 16px; color: #FF8C00; font-weight: 800; margin-bottom: 10px; padding-left: 5px; border-left: 4px solid #FF8C00; }
+
+        .menu-item-card { 
+            background: white; border-radius: 12px; padding: 15px; margin-bottom: 10px; 
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+        }
+        .item-info .name { font-size: 16px; font-weight: 600; color: #333; }
+        .item-info .price { font-size: 14px; color: #888; margin-top: 4px; }
         
-        /* Menu Item Styles */
-        .menu-item { display: flex; justify-content: space-between; align-items: center; background-color: white; padding: 15px; margin-bottom: 10px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
-        .item-info .name { font-size: 16px; font-weight: bold; }
-        .item-info .price-cat { font-size: 14px; color: #666; margin-top: 5px; }
-        .actions button { padding: 5px 10px; border: none; border-radius: 5px; margin-left: 5px; cursor: pointer; font-weight: 500; }
-        .edit-btn { background-color: #FF8C00; color: white; }
-        .delete-btn { background-color: #FF4500; color: white; }
-        .modal-content input, .modal-content select { width: 100%; padding: 10px; margin: 8px 0 15px 0; display: inline-block; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        .modal-actions { display: flex; justify-content: space-between; margin-top: 20px; }
+        .actions button { margin-left: 8px; padding: 6px 12px; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .edit-btn { background-color: #fff3e0; color: #FF8C00; }
+        .delete-btn { background-color: #ffebee; color: #d32f2f; }
+
+        /* 底部浮动按钮 */
+        .fab-add {
+            position: fixed; bottom: 30px; right: 20px;
+            background: #FF4500; color: white;
+            width: 56px; height: 56px; border-radius: 50%;
+            border: none; box-shadow: 0 4px 12px rgba(255, 69, 0, 0.4);
+            font-size: 30px; display: flex; justify-content: center; align-items: center;
+            cursor: pointer; z-index: 99;
+        }
+
+        /* Modal */
+        .modal { display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
+        .modal.show { opacity: 1; }
+        .modal-content { background: white; padding: 25px; border-radius: 16px; width: 85%; max-width: 320px; transform: scale(0.9); transition: transform 0.2s; }
+        .modal.show .modal-content { transform: scale(1); }
+        
+        input, select { width: 100%; padding: 12px; margin: 8px 0 15px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; background: #fafafa; }
+        .modal-actions { display: flex; justify-content: space-between; gap: 10px; }
+        .modal-actions button { flex: 1; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; }
+        .save-btn { background: #FF8C00; color: white; }
+        .cancel-btn { background: #f5f5f5; color: #333; }
+
+        #saveIndicator { position: fixed; top: 60px; right: 15px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px; z-index: 99; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        #saveIndicator.show { opacity: 1; }
     </style>
 </head>
 <body>
-    
-    <div id="loading-overlay" style="display: flex;"> 加载数据... 🚀 </div>
+    <div id="saveIndicator">☁️ 已同步</div>
 
     <header class="header-bar">
-        <h2>📝 编辑菜单</h2>
-        <button onclick="goToOrderingPage()">返回点单</button>
+        <h2>📝 菜单管理</h2>
+        <button onclick="window.location.href='index.html'">返回点单</button>
     </header>
 
-    <main class="menu-list" id="menuList">
-    </main>
-
-    <button class="add-item-btn" id="openModalBtn">➕ 添加新菜品</button>
+    <div class="menu-list" id="menuList"></div>
+    <button class="fab-add" id="openModalBtn">＋</button>
 
     <div id="itemModal" class="modal">
         <div class="modal-content">
-            <h3 id="modalTitle">添加新菜品</h3>
+            <h3 style="margin-top:0; color:#333;">菜品信息</h3>
             <form id="itemForm">
                 <input type="hidden" id="itemId">
-                <label for="itemName">菜品名称:</label>
-                <input type="text" id="itemName" required>
-
-                <label for="itemPrice">价格 (Ks):</label>
-                <input type="number" id="itemPrice" min="1" required>
-
-                <label for="itemCategory">分类:</label>
-                <select id="itemCategory" required>
-                    </select>
-
+                <label>名称</label>
+                <input type="text" id="itemName" required placeholder="例如：烤羊肉串">
+                <label>价格 (Ks)</label>
+                <input type="number" id="itemPrice" required placeholder="0">
+                <label>分类</label>
+                <select id="itemCategory" required></select>
                 <div class="modal-actions">
                     <button type="button" class="cancel-btn" onclick="hideModal()">取消</button>
-                    <button type="submit" class="save-btn" id="saveBtn">保存</button>
+                    <button type="submit" class="save-btn">保存</button>
                 </div>
             </form>
         </div>
     </div>
 
     <script>
-        // --- Cloud Sync Configuration (已更新为您提供的新信息) ---
+        // --- 共享配置 (必须与 index.html 完全一致) ---
         const JSONBIN_ID = '69174442ae596e708f5901ae'; 
         const JSONBIN_MASTER_KEY = '$2a$10$ol9N5tLV0G2AnDYaF4sO4O2l0RoR8OSXagA4IUy2wiwdntZDuzRh2';
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
+        const CACHE_KEY = 'bbq_app_local_cache'; 
 
-        let globalCloudData = {
-            menu_data: [],
-            table_orders: {}, 
-            income_data: { total: 0, closedOrders: [] },
-            purchase_data: { productTemplate: {}, cartData: [] }
-        };
-        let menuItems = [];
-        const menuList = document.getElementById('menuList');
-        const itemModal = document.getElementById('itemModal');
-        const itemForm = document.getElementById('itemForm');
-        const itemCategorySelect = document.getElementById('itemCategory');
+        let globalData = { menu_data: [] };
 
-        // --- Cloud Utilities ---
-        async function loadCloudData() {
-            try {
-                const response = await fetch(JSONBIN_URL + '/latest', {
-                    method: 'GET',
-                    headers: {
-                        'X-Master-Key': JSONBIN_MASTER_KEY,
-                        'Content-Type': 'application/json'
-                    }
-                });
-                if (!response.ok) throw new Error(`Cloud fetch failed: ${response.statusText}`);
-                const data = await response.json();
-                if (data.record) {
-                    globalCloudData = data.record;
-                    if (!globalCloudData.menu_data) globalCloudData.menu_data = [];
-                    menuItems = globalCloudData.menu_data;
-                }
-            } catch (error) {
-                console.error("加载云端数据失败，使用本地默认数据。", error);
-                alert("云端数据加载失败！请检查 JSONBin 配置或网络。");
+        // --- 本地缓存工具 ---
+        function loadCache() {
+            const c = localStorage.getItem(CACHE_KEY);
+            return c ? JSON.parse(c) : null;
+        }
+        function saveCache(data) { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }
+        function debounce(fn, wait) { let t; return function(...args) { clearTimeout(t); t = setTimeout(()=>fn.apply(this, args), wait); }; }
+
+        // --- 数据加载 ---
+        async function init() {
+            // 1. 缓存优先
+            const local = loadCache();
+            if (local) {
+                globalData = local;
+                renderList();
             }
-        }
-
-        async function saveCloudData() {
-            globalCloudData.menu_data = menuItems;
-            try {
-                const response = await fetch(JSONBIN_URL, {
-                    method: 'PUT',
-                    headers: {
-                        'X-Master-Key': JSONBIN_MASTER_KEY,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(globalCloudData)
-                });
-                if (!response.ok) throw new Error(`Cloud save failed: ${response.statusText}`);
-                console.log("数据已成功同步到云端。");
-                return true;
-            } catch (error) {
-                console.error("保存云端数据失败。", error);
-                alert("数据保存失败！请检查 JSONBin 配置或网络。");
-                return false;
-            }
-        }
-        
-        // --- 核心逻辑 ---
-        function generateUniqueId() {
-            return 'item_' + Date.now() + Math.random().toString(36).substr(2, 9);
-        }
-
-        function renderMenu() {
-            menuList.innerHTML = '';
             
-            if (menuItems.length === 0) {
-                 menuList.innerHTML = '<p style="text-align: center; color: #666; padding: 50px;">菜单为空，请点击下方按钮添加菜品。</p>';
-                 return;
+            // 2. 悄悄同步
+            try {
+                const res = await fetch(JSONBIN_URL + '/latest', { headers: { 'X-Master-Key': JSONBIN_MASTER_KEY } });
+                const json = await res.json();
+                if (json.record) {
+                    globalData = json.record;
+                    if(!globalData.menu_data) globalData.menu_data = [];
+                    saveCache(globalData); // 更新缓存
+                    renderList(); // 刷新界面
+                }
+            } catch (e) { console.log('离线模式'); }
+        }
+
+        // --- 保存逻辑 ---
+        async function saveData() {
+            const ind = document.getElementById('saveIndicator');
+            ind.textContent = '☁️ 同步中...'; ind.classList.add('show');
+            
+            saveCache(globalData); // 立即存本地
+            
+            try {
+                await fetch(JSONBIN_URL, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
+                    body: JSON.stringify(globalData)
+                });
+                ind.textContent = '✅ 已同步';
+                setTimeout(()=>ind.classList.remove('show'), 2000);
+            } catch (e) {
+                ind.textContent = '⚠️ 仅本地保存';
+                setTimeout(()=>ind.classList.remove('show'), 3000);
+            }
+        }
+
+        // --- 渲染逻辑 ---
+        function renderList() {
+            const list = document.getElementById('menuList');
+            list.innerHTML = '';
+            list.classList.add('loaded');
+            
+            const items = globalData.menu_data || [];
+            if (items.length === 0) {
+                list.innerHTML = '<div style="text-align:center; color:#999; margin-top:50px;">暂无菜品，点击右下角添加</div>';
+                return;
             }
 
-            // 按分类分组
-            const categorizedItems = menuItems.reduce((acc, item) => {
-                const category = item.category || '未分类';
-                if (!acc[category]) {
-                    acc[category] = [];
-                }
-                acc[category].push(item);
+            const groups = items.reduce((acc, item) => {
+                (acc[item.category] = acc[item.category] || []).push(item);
                 return acc;
             }, {});
 
-            for (const category in categorizedItems) {
-                // 类别标题
-                const categoryHeader = document.createElement('h3');
-                categoryHeader.className = 'category-header';
-                categoryHeader.textContent = category;
-                categoryHeader.style.cssText = 'background-color: #FFE4B5; color: #FF4500; padding: 10px; margin-top: 20px; border-radius: 5px;';
-                menuList.appendChild(categoryHeader);
-
-                // 菜品列表
-                categorizedItems[category].forEach(item => {
-                    const itemElement = document.createElement('div');
-                    itemElement.className = 'menu-item';
-                    itemElement.innerHTML = `
+            for (const [cat, catItems] of Object.entries(groups)) {
+                const block = document.createElement('div');
+                block.className = 'category-block';
+                block.innerHTML = `<div class="category-title">${cat}</div>`;
+                
+                catItems.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = 'menu-item-card';
+                    div.innerHTML = `
                         <div class="item-info">
                             <div class="name">${item.name}</div>
-                            <div class="price-cat">价格: ${item.price.toLocaleString()} Ks</div>
+                            <div class="price">${Number(item.price).toLocaleString()} Ks</div>
                         </div>
                         <div class="actions">
                             <button class="edit-btn" onclick="editItem('${item.id}')">编辑</button>
                             <button class="delete-btn" onclick="deleteItem('${item.id}')">删除</button>
                         </div>
                     `;
-                    menuList.appendChild(itemElement);
+                    block.appendChild(div);
                 });
+                list.appendChild(block);
             }
             renderCategoryOptions();
         }
 
         function renderCategoryOptions() {
-            const categories = [...new Set(menuItems.map(item => item.category))].filter(c => c);
-            itemCategorySelect.innerHTML = '<option value="">-- 选择或输入分类 --</option>';
-
-            categories.forEach(category => {
-                const option = document.createElement('option');
-                option.value = category;
-                option.textContent = category;
-                itemCategorySelect.appendChild(option);
+            const select = document.getElementById('itemCategory');
+            const existing = [...new Set((globalData.menu_data || []).map(i => i.category))];
+            select.innerHTML = '<option value="">-- 选择或输入新分类 --</option>';
+            existing.forEach(c => {
+                select.innerHTML += `<option value="${c}">${c}</option>`;
             });
+            select.innerHTML += `<option value="NEW">➕ 新增分类...</option>`;
             
-            // 允许添加新分类
-            const newOption = document.createElement('option');
-            newOption.value = 'new_category';
-            newOption.textContent = '➕ 新增分类...';
-            itemCategorySelect.appendChild(newOption);
-            
-            itemCategorySelect.onchange = function() {
-                if (this.value === 'new_category') {
-                    const newCat = prompt('请输入新的分类名称:');
-                    if (newCat) {
-                        const newOpt = document.createElement('option');
-                        newOpt.value = newCat;
-                        newOpt.textContent = newCat;
-                        itemCategorySelect.insertBefore(newOpt, itemCategorySelect.lastChild);
-                        itemCategorySelect.value = newCat;
+            select.onchange = function() {
+                if(this.value === 'NEW') {
+                    const val = prompt("输入新分类名称:");
+                    if(val) {
+                        const opt = document.createElement('option');
+                        opt.value = val; opt.text = val; opt.selected = true;
+                        select.insertBefore(opt, select.lastChild);
                     } else {
-                         itemCategorySelect.value = itemCategorySelect.options[0].value;
+                        select.value = "";
                     }
                 }
-            };
-        }
-
-        async function addItem(event) {
-            event.preventDefault();
-            
-            const id = document.getElementById('itemId').value;
-            const name = document.getElementById('itemName').value;
-            const price = parseInt(document.getElementById('itemPrice').value, 10);
-            const category = document.getElementById('itemCategory').value;
-            
-            if (!name || isNaN(price) || price <= 0 || !category) {
-                alert('请填写完整的菜品信息（名称、有效价格和分类）。');
-                return;
-            }
-
-            const categoryName = category === 'new_category' ? prompt('请输入新的分类名称:') : category;
-            if (!categoryName) return; 
-
-            let newItem = { name, price, category: categoryName };
-
-            if (id) {
-                // 编辑现有菜品
-                const index = menuItems.findIndex(item => item.id === id);
-                if (index !== -1) {
-                    menuItems[index] = { ...menuItems[index], ...newItem };
-                }
-            } else {
-                // 添加新菜品
-                newItem.id = generateUniqueId();
-                menuItems.push(newItem);
-            }
-
-            const saved = await saveCloudData();
-            if (saved) {
-                hideModal();
-                renderMenu();
             }
         }
 
-        function editItem(id) {
-            const item = menuItems.find(i => i.id === id);
-            if (!item) return;
+        // --- 操作逻辑 ---
+        const modal = document.getElementById('itemModal');
+        
+        document.getElementById('openModalBtn').onclick = () => {
+            document.getElementById('itemForm').reset();
+            document.getElementById('itemId').value = '';
+            modal.style.display = 'flex';
+            setTimeout(()=>modal.classList.add('show'), 10);
+            renderCategoryOptions();
+        };
 
-            showModal('编辑菜品');
+        window.hideModal = () => {
+            modal.classList.remove('show');
+            setTimeout(()=>modal.style.display = 'none', 200);
+        };
+
+        window.editItem = (id) => {
+            const item = globalData.menu_data.find(i => i.id === id);
+            if(!item) return;
             document.getElementById('itemId').value = item.id;
             document.getElementById('itemName').value = item.name;
             document.getElementById('itemPrice').value = item.price;
             
-            // 确保分类选项存在
-            renderCategoryOptions(); 
-            // 尝试直接设置值
-            document.getElementById('itemCategory').value = item.category;
-             // 如果直接设置失败 (例如: 分类是通过 prompt 添加的)，则需要重新设置
-            if (document.getElementById('itemCategory').value !== item.category) {
-                const newOpt = document.createElement('option');
-                newOpt.value = item.category;
-                newOpt.textContent = item.category;
-                itemCategorySelect.insertBefore(newOpt, itemCategorySelect.lastChild);
-                itemCategorySelect.value = item.category;
+            // 处理分类
+            const sel = document.getElementById('itemCategory');
+            renderCategoryOptions();
+            let opt = Array.from(sel.options).find(o => o.value === item.category);
+            if(!opt) {
+                opt = new Option(item.category, item.category);
+                sel.insertBefore(opt, sel.lastChild);
             }
-        }
-
-        async function deleteItem(id) {
-            if (confirm('确定要删除此菜品吗？此操作不可撤销。')) {
-                menuItems = menuItems.filter(item => item.id !== id);
-                const saved = await saveCloudData();
-                if (saved) {
-                    renderMenu();
-                }
-            }
-        }
-        
-        function showModal(title) {
-            document.getElementById('modalTitle').textContent = title;
-            itemModal.style.display = 'flex';
-        }
-
-        function hideModal() {
-            itemModal.style.display = 'none';
-            // 重置表单和ID
-            itemForm.reset();
-            document.getElementById('itemId').value = '';
-        }
-
-        // --- 页面跳转 (FIXED: 确保使用正确的文件名 `index.html` - 修复点！) ---
-        function goToOrderingPage() {
-            window.location.href = 'index.html'; 
-        }
-
-        // --- 初始化 ---
-        document.addEventListener('DOMContentLoaded', async () => {
-            document.getElementById('openModalBtn').onclick = () => {
-                showModal('添加新菜品');
-                renderCategoryOptions(); // 确保打开前加载最新分类
-            };
-            document.getElementById('itemForm').onsubmit = addItem;
+            sel.value = item.category;
             
-            await loadCloudData();
-            document.getElementById('loading-overlay').style.display = 'none';
-            renderMenu();
-        });
+            modal.style.display = 'flex';
+            setTimeout(()=>modal.classList.add('show'), 10);
+        };
+
+        window.deleteItem = async (id) => {
+            if(confirm('确定删除吗？')) {
+                globalData.menu_data = globalData.menu_data.filter(i => i.id !== id);
+                renderList();
+                await saveData();
+            }
+        };
+
+        document.getElementById('itemForm').onsubmit = async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('itemId').value;
+            const name = document.getElementById('itemName').value;
+            const price = Number(document.getElementById('itemPrice').value);
+            const cat = document.getElementById('itemCategory').value;
+            
+            if(!name || !price || !cat || cat === 'NEW') return;
+
+            if(id) {
+                const idx = globalData.menu_data.findIndex(i => i.id === id);
+                if(idx > -1) globalData.menu_data[idx] = { id, name, price, category: cat };
+            } else {
+                globalData.menu_data.push({
+                    id: 'item_' + Date.now(),
+                    name, price, category: cat
+                });
+            }
+            
+            hideModal();
+            renderList();
+            await saveData();
+        };
+
+        init();
     </script>
 </body>
-
 </html>
