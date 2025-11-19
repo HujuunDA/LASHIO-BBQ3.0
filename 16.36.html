@@ -2,59 +2,115 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>采购管理</title>
     <style>
-        body { font-family: -apple-system, sans-serif; margin: 0; background: #f2f2f7; padding-bottom: 60px; touch-action: manipulation; }
+        /* --- 全局设置 --- */
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            margin: 0; 
+            background: #f2f2f7; 
+            padding-bottom: 80px; 
+            touch-action: manipulation; 
+            -webkit-text-size-adjust: 100%;
+        }
         
-        /* 头部导航 (保持一致性) */
+        /* 头部导航 */
         .header-bar { 
             background: #007aff; color: white; padding: 12px 15px; 
             display: flex; justify-content: space-between; align-items: center;
             position: sticky; top: 0; z-index: 10;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .header-bar h1 { margin: 0; font-size: 18px; }
-        .back-btn { background: rgba(255,255,255,0.2); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; }
+        .header-bar h1 { margin: 0; font-size: 18px; font-weight: 600; }
+        .back-btn { background: rgba(255,255,255,0.2); color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .back-btn:active { background: rgba(255,255,255,0.4); }
 
-        /* Tabs */
-        .tabs { display: flex; background: white; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-        .tab-btn { flex: 1; padding: 10px; border: none; background: #f0f0f0; border-radius: 8px; margin: 0 5px; font-weight: 600; color: #888; transition: 0.2s; }
-        .tab-btn.active { background: #007aff; color: white; }
+        /* 选项卡 Tabs */
+        .tabs { display: flex; background: white; padding: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); position: sticky; top: 50px; z-index: 9; }
+        .tab-btn { flex: 1; padding: 10px; border: none; background: #f0f0f0; border-radius: 8px; margin: 0 5px; font-weight: 600; color: #888; transition: 0.2s; cursor: pointer; }
+        .tab-btn.active { background: #007aff; color: white; box-shadow: 0 2px 5px rgba(0,122,255,0.3); }
 
-        /* 内容区 */
-        .tab-content { display: none; padding: 15px; }
+        /* 内容容器 */
+        .tab-content { display: none; padding: 15px; animation: fadeIn 0.2s; }
         .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* 选品列表 */
-        .category-group h3 { font-size: 14px; color: #007aff; margin: 15px 0 5px; text-transform: uppercase; letter-spacing: 1px; }
+        /* 📦 选品列表样式 */
+        .category-group { background: white; border-radius: 12px; overflow: hidden; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .category-header { background: #f9f9f9; padding: 10px 15px; font-size: 14px; color: #007aff; font-weight: bold; border-bottom: 1px solid #eee; }
+        
         .item-row { 
-            background: white; padding: 12px; border-bottom: 1px solid #eee; display: flex; align-items: center; 
-            justify-content: space-between;
+            padding: 12px 15px; border-bottom: 1px solid #eee; display: flex; align-items: center; 
+            justify-content: space-between; transition: background 0.2s;
         }
-        .item-row:first-child { border-top-left-radius: 10px; border-top-right-radius: 10px; }
-        .item-row:last-child { border-bottom-left-radius: 10px; border-bottom-right-radius: 10px; border-bottom: none; }
+        .item-row:last-child { border-bottom: none; }
+        .item-row:active { background: #f5f5f5; }
         
-        input[type="checkbox"] { width: 24px; height: 24px; margin-right: 10px; }
-        .item-label { flex-grow: 1; font-size: 16px; }
+        /* 复选框放大，好点 */
+        input[type="checkbox"] { width: 22px; height: 22px; margin-right: 12px; accent-color: #007aff; cursor: pointer; }
+        .item-label { flex-grow: 1; font-size: 16px; color: #333; }
         
-        .action-btn { border: none; background: none; font-size: 16px; padding: 5px 10px; color: #999; }
-        .delete-item { color: #ff3b30; }
+        .delete-item { border: none; background: none; font-size: 18px; padding: 5px 10px; color: #ccc; cursor: pointer; }
+        .delete-item:active { color: #ff3b30; }
 
-        /* 购物车表格 */
-        .cart-table { width: 100%; background: white; border-radius: 10px; border-collapse: collapse; overflow: hidden; }
-        .cart-table td { padding: 12px; border-bottom: 1px solid #eee; }
-        .price-input { width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 6px; text-align: right; font-size: 16px; }
-        .done-row { opacity: 0.5; text-decoration: line-through; background: #f9f9f9; }
+        /* 📋 购物车/清单样式 (重点优化) */
+        .cart-container { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
+        .cart-row { 
+            display: flex; align-items: center; padding: 12px 15px; border-bottom: 1px solid #eee; 
+            transition: background 0.3s;
+        }
+        .cart-row:last-child { border-bottom: none; }
+        
+        /* 完成状态样式 */
+        .cart-row.done { background-color: #f0fdf4; } /* 浅绿色背景 */
+        .cart-row.done .item-name { text-decoration: line-through; color: #aaa; }
+        
+        .item-name { flex: 1; font-size: 16px; font-weight: 500; margin-right: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        
+        /* 价格输入框优化 */
+        .price-input { 
+            width: 100px; 
+            padding: 10px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            text-align: right; 
+            font-size: 18px; 
+            font-weight: bold; 
+            color: #333;
+            background: #fafafa;
+            outline: none;
+            transition: border 0.2s, background 0.2s;
+        }
+        .price-input:focus { border-color: #007aff; background: white; box-shadow: 0 0 0 2px rgba(0,122,255,0.1); }
+        .price-input::placeholder { color: #ccc; font-weight: normal; }
+        /* 完成状态下的输入框 */
+        .cart-row.done .price-input { color: #34c759; border-color: #c6f6d5; background: white; }
 
         /* 底部控件 */
-        .add-bar { background: white; padding: 15px; margin-top: 20px; border-radius: 10px; display: flex; gap: 10px; }
-        .add-bar input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
-        .primary-btn { background: #007aff; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; }
+        .add-bar { display: flex; gap: 10px; margin-top: 20px; padding: 0 5px; }
+        .add-bar input { flex: 1; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border: none; }
+        .primary-btn { background: #007aff; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,122,255,0.3); }
+        .primary-btn:active { transform: scale(0.96); }
         
-        .total-bar { background: #333; color: white; padding: 15px; position: fixed; bottom: 0; width: 100%; left: 0; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; }
-        .copy-btn { background: #34c759; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; }
+        .clear-btn { background: #ff3b30; color: white; border: none; padding: 12px; border-radius: 10px; width: 100%; margin-top: 20px; font-weight: bold; font-size: 16px; cursor: pointer; }
+
+        /* 底部总计栏 */
+        .total-bar { 
+            background: rgba(30, 30, 30, 0.95); 
+            backdrop-filter: blur(10px);
+            color: white; 
+            padding: 15px 20px; 
+            position: fixed; bottom: 0; left: 0; width: 100%; 
+            box-sizing: border-box; 
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 20;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+            padding-bottom: max(15px, env(safe-area-inset-bottom));
+        }
+        .copy-btn { background: #34c759; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: bold; font-size: 14px; cursor: pointer; }
         
-        #saveIndicator { position: fixed; top: 60px; right: 15px; background: rgba(0,0,0,0.7); color: white; padding: 5px 10px; border-radius: 20px; font-size: 12px; z-index: 99; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+        #saveIndicator { position: fixed; top: 65px; right: 15px; background: rgba(0,0,0,0.7); color: white; padding: 5px 12px; border-radius: 20px; font-size: 12px; z-index: 99; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
         #saveIndicator.show { opacity: 1; }
     </style>
 </head>
@@ -67,37 +123,40 @@
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('pick')">📦 选品</button>
-        <button class="tab-btn" onclick="switchTab('cart')">📋 清单 (<span id="cartCount">0</span>)</button>
+        <button class="tab-btn active" onclick="switchTab('pick')">📦 选品库</button>
+        <button class="tab-btn" onclick="switchTab('cart')">📋 采购单 (<span id="cartCount">0</span>)</button>
     </div>
 
     <div id="pickTab" class="tab-content active">
-        <div id="productList"></div>
+        <div id="productList">
+            </div>
         
         <div class="add-bar">
-            <input type="text" id="newItemName" placeholder="输入新商品名称...">
-            <button class="primary-btn" onclick="addNewItem()">添加</button>
+            <input type="text" id="newItemName" placeholder="输入新商品名称 (如: 孜然粉)...">
+            <button class="primary-btn" onclick="addNewItem()">＋ 添加</button>
         </div>
         <div style="height: 60px;"></div>
     </div>
 
     <div id="cartTab" class="tab-content">
-        <table class="cart-table">
-            <tbody id="cartBody"></tbody>
-        </table>
+        <div class="cart-container" id="cartList">
+            </div>
         
-        <div style="margin-top: 20px; text-align: center;">
-            <button class="primary-btn" style="background: #ff3b30;" onclick="clearDone()">🧹 清除已买好的</button>
+        <div style="padding: 0 20px;">
+            <button class="clear-btn" onclick="clearDone()">🧹 清除已买好的项目</button>
         </div>
-        <div style="height: 80px;"></div> </div>
+        <div style="height: 100px;"></div> </div>
 
     <div class="total-bar" id="totalBar" style="display:none;">
-        <div style="font-size: 18px; font-weight: bold;">总计: <span id="grandTotal">0</span></div>
+        <div>
+            <div style="font-size: 13px; color: #aaa;">预计支出</div>
+            <div style="font-size: 20px; font-weight: bold; font-family: monospace;" id="grandTotal">0</div>
+        </div>
         <button class="copy-btn" onclick="copyText()">📋 复制清单</button>
     </div>
 
     <script>
-        // 统一配置
+        // --- 核心配置 ---
         const JSONBIN_ID = '69174442ae596e708f5901ae'; 
         const JSONBIN_MASTER_KEY = '$2a$10$ol9N5tLV0G2AnDYaF4sO4O2l0RoR8OSXagA4IUy2wiwdntZDuzRh2';
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
@@ -105,6 +164,7 @@
 
         let globalData = { purchase_data: { productTemplate: {}, cartData: [] } };
 
+        // --- 缓存与同步 ---
         function loadCache() { const c = localStorage.getItem(CACHE_KEY); return c ? JSON.parse(c) : null; }
         function saveCache(data) { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }
         function debounce(fn, wait) { let t; return function(...args) { clearTimeout(t); t = setTimeout(()=>fn.apply(this, args), wait); }; }
@@ -120,9 +180,12 @@
                     globalData = json.record;
                     if(!globalData.purchase_data) globalData.purchase_data = { productTemplate: {"默认":[]}, cartData: [] };
                     saveCache(globalData);
-                    renderAll();
+                    // 如果用户正在输入，不要强制重绘打断他
+                    if(document.activeElement.tagName !== 'INPUT') {
+                        renderAll();
+                    }
                 }
-            } catch(e) {}
+            } catch(e) { console.log("离线模式"); }
         }
 
         const saveData = debounce(async () => {
@@ -138,10 +201,10 @@
                 });
                 ind.textContent = '✅ 已同步';
                 setTimeout(()=>ind.classList.remove('show'), 2000);
-            } catch(e) { ind.textContent = '仅本地保存'; }
-        }, 1000);
+            } catch(e) { ind.textContent = '⚠️ 仅本地保存'; }
+        }, 1500); // 稍微延长保存时间，避免输入时频繁请求
 
-        // --- 逻辑 ---
+        // --- 渲染逻辑 ---
         function renderAll() {
             renderProductList();
             renderCart();
@@ -152,150 +215,250 @@
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tab+'Tab').classList.add('active');
             event.currentTarget.classList.add('active');
-            if(tab === 'cart') document.getElementById('totalBar').style.display = 'flex';
-            else document.getElementById('totalBar').style.display = 'none';
+            
+            if(tab === 'cart') {
+                document.getElementById('totalBar').style.display = 'flex';
+                renderCart(); // 切换回来时刷新一下，确保数据最新
+            } else {
+                document.getElementById('totalBar').style.display = 'none';
+                renderProductList(); // 刷新勾选状态
+            }
         }
 
-        // 1. 选品列表
+        // 1. 选品列表渲染
         function renderProductList() {
             const container = document.getElementById('productList');
             container.innerHTML = '';
             const tmpl = globalData.purchase_data.productTemplate || {};
             const cartNames = new Set((globalData.purchase_data.cartData || []).map(i => i.name));
 
-            for (const [cat, items] of Object.entries(tmpl)) {
-                const div = document.createElement('div');
-                div.className = 'category-group';
-                div.innerHTML = `<h3>${cat}</h3>`;
+            // 排序分类
+            const sortedCats = Object.keys(tmpl).sort();
+
+            for (const cat of sortedCats) {
+                const items = tmpl[cat];
+                if(!items || items.length === 0) continue;
+
+                const groupDiv = document.createElement('div');
+                groupDiv.className = 'category-group';
+                
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.textContent = cat;
+                groupDiv.appendChild(header);
                 
                 items.forEach(item => {
-                    const checked = cartNames.has(item) ? 'checked' : '';
+                    const isChecked = cartNames.has(item);
                     const row = document.createElement('div');
                     row.className = 'item-row';
                     row.innerHTML = `
-                        <div style="display:flex; align-items:center; flex:1;">
-                            <input type="checkbox" onchange="toggleCart('${item}')" ${checked}>
-                            <span class="item-label">${item}</span>
+                        <div style="display:flex; align-items:center; flex:1; cursor:pointer;" onclick="this.querySelector('input').click()">
+                            <input type="checkbox" ${isChecked ? 'checked' : ''} onchange="toggleCartItem('${item}', this.checked); event.stopPropagation();">
+                            <span class="item-label" style="${isChecked ? 'color:#007aff; font-weight:bold;' : ''}">${item}</span>
                         </div>
-                        <button class="action-btn delete-item" onclick="deleteTemplate('${cat}', '${item}')">🗑</button>
+                        <button class="delete-item" onclick="deleteTemplate('${cat}', '${item}')">×</button>
                     `;
-                    div.appendChild(row);
+                    groupDiv.appendChild(row);
                 });
-                container.appendChild(div);
+                container.appendChild(groupDiv);
             }
         }
 
-        window.toggleCart = (name) => {
-            let cart = globalData.purchase_data.cartData || [];
-            const idx = cart.findIndex(i => i.name === name);
+        // 2. 购物车渲染 (核心优化部分)
+        function renderCart() {
+            const container = document.getElementById('cartList');
+            // 如果正在输入，不要完全重绘，否则焦点会丢失
+            // 这里我们做一个简单的判断，如果是初始化或者切换Tab，则重绘
+            // 实际输入更新时，我们通过 DOM 操作单独更新行，不调用 renderCart
             
-            if(idx > -1) {
-                cart.splice(idx, 1);
+            container.innerHTML = '';
+            const cart = globalData.purchase_data.cartData || [];
+            document.getElementById('cartCount').textContent = cart.length;
+            
+            if(cart.length === 0) {
+                container.innerHTML = '<div style="padding:40px; text-align:center; color:#999;">清单是空的，去选品库添加吧</div>';
+                updateGrandTotal();
+                return;
+            }
+
+            cart.forEach((item, idx) => {
+                const row = document.createElement('div');
+                row.className = `cart-row ${item.purchased ? 'done' : ''}`;
+                row.id = `cart-row-${idx}`;
+                
+                // inputmode="decimal" 唤起数字键盘
+                row.innerHTML = `
+                    <input type="checkbox" ${item.purchased ? 'checked' : ''} onchange="togglePurchased(${idx}, this.checked)">
+                    <div class="item-name">${item.name}</div>
+                    <input type="number" 
+                           class="price-input" 
+                           placeholder="0" 
+                           value="${item.price}" 
+                           inputmode="decimal" 
+                           id="price-input-${idx}"
+                           onfocus="this.select()"
+                           oninput="handlePriceInput(${idx}, this)">
+                `;
+                container.appendChild(row);
+            });
+            updateGrandTotal();
+        }
+
+        // --- 交互逻辑 (丝滑输入的核心) ---
+
+        // 处理价格输入 (不重绘列表)
+        window.handlePriceInput = (idx, inputEl) => {
+            const val = inputEl.value;
+            const item = globalData.purchase_data.cartData[idx];
+            
+            // 1. 更新数据
+            item.price = val;
+            
+            // 2. 智能勾选逻辑
+            const row = document.getElementById(`cart-row-${idx}`);
+            const checkbox = row.querySelector('input[type="checkbox"]');
+            
+            if (val && parseFloat(val) > 0) {
+                if (!item.purchased) {
+                    item.purchased = true;
+                    checkbox.checked = true;
+                    row.classList.add('done'); // 视觉变灰
+                }
+            } else if (val === '') {
+                // 如果清空价格，取消勾选 (可选逻辑，看个人习惯，这里设为取消)
+                if (item.purchased) {
+                    item.purchased = false;
+                    checkbox.checked = false;
+                    row.classList.remove('done');
+                }
+            }
+            
+            // 3. 仅更新总价 (不重绘列表，键盘不收起)
+            updateGrandTotal();
+            
+            // 4. 防抖保存
+            saveData();
+        };
+
+        // 手动点击复选框
+        window.togglePurchased = (idx, checked) => {
+            const item = globalData.purchase_data.cartData[idx];
+            item.purchased = checked;
+            
+            const row = document.getElementById(`cart-row-${idx}`);
+            if(checked) row.classList.add('done');
+            else row.classList.remove('done');
+            
+            updateGrandTotal();
+            saveData();
+        };
+
+        // 计算总价
+        function updateGrandTotal() {
+            const cart = globalData.purchase_data.cartData || [];
+            let total = 0;
+            cart.forEach(i => {
+                // 只要输入了价格就算，或者勾选了且有价格就算
+                if(i.price && !isNaN(i.price)) {
+                    total += parseFloat(i.price);
+                }
+            });
+            document.getElementById('grandTotal').textContent = total.toLocaleString() + " Ks";
+        }
+
+        // 选品库操作
+        window.toggleCartItem = (name, checked) => {
+            let cart = globalData.purchase_data.cartData || [];
+            if(checked) {
+                // 检查是否已存在
+                if(!cart.find(i => i.name === name)) {
+                    cart.push({ name: name, purchased: false, price: '' });
+                }
             } else {
-                cart.push({ name: name, purchased: false, price: '' });
+                const idx = cart.findIndex(i => i.name === name);
+                if(idx > -1) cart.splice(idx, 1);
             }
             globalData.purchase_data.cartData = cart;
-            renderCart();
+            document.getElementById('cartCount').textContent = cart.length;
             saveData();
         };
 
         window.addNewItem = () => {
-            const val = document.getElementById('newItemName').value.trim();
-            if(!val) return;
+            const name = document.getElementById('newItemName').value.trim();
+            if(!name) return;
             
-            // 简单归类逻辑
+            // 默认加到 "默认" 分类，或者创建一个 "新增" 分类
             const tmpl = globalData.purchase_data.productTemplate;
-            let targetCat = '默认';
+            let targetCat = "其他";
+            
+            // 简单的关键词分类 (可选)
+            if(name.includes("肉") || name.includes("鱼")) targetCat = "肉类";
+            else if(name.includes("菜")) targetCat = "蔬菜";
+            
             if(!tmpl[targetCat]) tmpl[targetCat] = [];
             
-            if(!Object.values(tmpl).flat().includes(val)) {
-                tmpl[targetCat].push(val);
-                toggleCart(val); // 自动加入购物车
+            if(!Object.values(tmpl).flat().includes(name)) {
+                tmpl[targetCat].push(name);
+                // 自动加到购物车
+                toggleCartItem(name, true);
+                
                 document.getElementById('newItemName').value = '';
                 renderProductList();
                 saveData();
+                alert(`已添加 "${name}" 并加入清单`);
+            } else {
+                alert("该商品已存在");
             }
         };
         
         window.deleteTemplate = (cat, item) => {
-            if(confirm('从模板中彻底删除？')) {
+            if(confirm(`从选品库中永久删除 "${item}" ?`)) {
                 const list = globalData.purchase_data.productTemplate[cat];
                 const idx = list.indexOf(item);
                 if(idx > -1) list.splice(idx, 1);
                 renderProductList();
                 saveData();
             }
-        }
-
-        // 2. 购物车
-        function renderCart() {
-            const body = document.getElementById('cartBody');
-            body.innerHTML = '';
-            const cart = globalData.purchase_data.cartData || [];
-            document.getElementById('cartCount').textContent = cart.length;
-            
-            let total = 0;
-
-            if(cart.length === 0) {
-                body.innerHTML = '<tr><td colspan="3" style="text-align:center; color:#999;">清单是空的</td></tr>';
-            } else {
-                cart.forEach((item, idx) => {
-                    const doneClass = item.purchased ? 'done-row' : '';
-                    const row = document.createElement('tr');
-                    row.className = doneClass;
-                    row.innerHTML = `
-                        <td width="30"><input type="checkbox" ${item.purchased ? 'checked' : ''} onchange="toggleStatus(${idx})"></td>
-                        <td>${item.name}</td>
-                        <td width="90">
-                            <input type="number" class="price-input" placeholder="0" value="${item.price}" oninput="updatePrice(${idx}, this.value)">
-                        </td>
-                    `;
-                    body.appendChild(row);
-                    if(item.purchased && item.price) total += Number(item.price);
-                });
-            }
-            document.getElementById('grandTotal').textContent = total.toLocaleString();
-        }
-
-        window.toggleStatus = (idx) => {
-            const item = globalData.purchase_data.cartData[idx];
-            item.purchased = !item.purchased;
-            renderCart();
-            saveData();
         };
 
-        window.updatePrice = (idx, val) => {
-            const item = globalData.purchase_data.cartData[idx];
-            item.price = val;
-            if(val > 0) item.purchased = true; // 输入价格自动勾选
-            renderCart(); // 注意：这会导致输入框失去焦点，实际上应该用防抖，这里为了简化直接重绘，体验可能稍差。
-            // 优化：不完全重绘，只更新总价，这里略过保持简单。
-            saveData();
-        };
-
+        // 清空已完成
         window.clearDone = () => {
-            if(confirm('清除所有已买好的？')) {
-                globalData.purchase_data.cartData = globalData.purchase_data.cartData.filter(i => !i.purchased);
+            const cart = globalData.purchase_data.cartData;
+            const doneCount = cart.filter(i => i.purchased).length;
+            if(doneCount === 0) return alert("没有已完成的项目");
+            
+            if(confirm(`清除 ${doneCount} 个已购买项目？`)) {
+                globalData.purchase_data.cartData = cart.filter(i => !i.purchased);
                 renderCart();
-                renderProductList(); // 刷新选品页的勾选状态
+                renderProductList(); // 刷新选品状态
                 saveData();
             }
         };
 
         window.copyText = () => {
             const cart = globalData.purchase_data.cartData;
-            let text = `📅 ${new Date().toLocaleDateString()} 采购单:\n`;
+            let text = `📅 采购单 (${new Date().toLocaleDateString()}):\n\n`;
             let total = 0;
-            cart.forEach(i => {
-                if(i.purchased) {
-                    text += `✅ ${i.name}: ${i.price}\n`;
-                    total += Number(i.price || 0);
-                } else {
-                    text += `⬜ ${i.name}\n`;
-                }
-            });
-            text += `\n💰 总计: ${total}`;
-            navigator.clipboard.writeText(text).then(() => alert('已复制到剪贴板'));
+            
+            const bought = cart.filter(i => i.purchased);
+            const pending = cart.filter(i => !i.purchased);
+            
+            if(bought.length > 0) {
+                text += "✅ 已购:\n";
+                bought.forEach(i => {
+                    text += `${i.name} : ${i.price}\n`;
+                    if(i.price) total += parseFloat(i.price);
+                });
+            }
+            
+            if(pending.length > 0) {
+                text += "\n⬜ 待购:\n";
+                pending.forEach(i => text += `${i.name}\n`);
+            }
+            
+            text += `\n💰 总支出: ${total.toLocaleString()} Ks`;
+            
+            navigator.clipboard.writeText(text).then(() => alert("清单已复制！"));
         };
 
         init();
