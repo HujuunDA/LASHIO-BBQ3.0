@@ -2,130 +2,28 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>点菜单程序</title>
     <style>
-        /* --- 烧烤橙色主题 CSS 修改 --- */
-        /* 移除顶部导航栏留下的 padding */
+        /* --- 全局流畅度优化 --- */
         body { 
             margin: 0; 
-            font-family: Arial, sans-serif; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
             background-color: #f4f4f4; 
-            padding-bottom: 60px; 
-            /* 解决了 Safari 输入框自动缩放问题 */
+            padding-bottom: 80px; /* 底部留白增加 */
             -webkit-text-size-adjust: 100%;
+            -webkit-font-smoothing: antialiased; /* 字体抗锯齿 */
+            touch-action: manipulation; /* 移除点击延迟 */
         } 
-        .top-nav { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            padding: 10px; 
-            background-color: #FF8C00; /* 主色：橙色 */
-            color: white; 
-            position: fixed; 
-            width: 100%; 
-            top: 0; 
-            box-sizing: border-box; 
-            z-index: 10; 
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
-            /* 调整 top-nav 布局，以便容纳备注框 */
-            flex-wrap: nowrap; /* 防止元素换行 */
-        }
-        
-        /* 新增: 桌号和备注的容器，确保它们靠左 */
-        .left-controls {
-            display: flex;
-            align-items: center;
-            flex-grow: 1; /* 允许它占据剩余空间，但限制其宽度 */
-            gap: 10px;
-            overflow: hidden; /* 隐藏溢出内容 */
-        }
-        
-        /* 修改: 给桌号显示添加边框 (红色框样式) */
-        #table-display {
-            background-color: #FF4500; /* 强调色：橙红色 */
-            color: white; 
-            border: 2px solid #FF4500; /* 红色的边框 */
-            padding: 8px 10px;
-            border-radius: 5px; 
-            font-size: 14px; 
-            cursor: pointer; 
-            transition: opacity 0.2s; 
-            white-space: nowrap;
-            font-weight: bold; 
-        }
-        
-        /* 新增: 备注输入框样式 (字体改为 16px 解决自动缩放问题) */
-        #table-notes-input {
-            flex-grow: 1; /* 占据剩余的大部分空间 */
-            padding: 8px;
-            border: 1px solid #FF4500; /* 红色边框 */
-            border-radius: 5px;
-            font-size: 16px; /* 关键：提高字体大小，防止 Safari 自动缩放 */
-            color: #333;
-            max-width: 180px; /* 限制最大宽度，让它变短 */
-            touch-action: manipulation; /* 优化触摸响应 */
+
+        /* --- 按钮点击反馈动画 (按下去会缩一下) --- */
+        button:active, .menu-item:active {
+            transform: scale(0.96);
+            transition: transform 0.1s ease;
         }
 
-        .right-buttons {
-            display: flex;
-            gap: 5px; 
-            flex-shrink: 0; /* 防止右侧按钮被挤压 */
-        }
-        .top-nav button { 
-            background-color: #FF4500; /* 强调色：橙红色 */
-            color: white; 
-            border: none; 
-            padding: 8px 10px;
-            border-radius: 5px; 
-            font-size: 14px; 
-            cursor: pointer; 
-            transition: opacity 0.2s; 
-            white-space: nowrap;
-        }
-        .category-header { 
-            background-color: #FFE4B5; /* 浅橙色背景 */
-            color: #FF4500; /* 橙红色文字 */
-            padding: 15px; 
-            margin-top: 0; 
-            font-weight: bold; 
-            font-size: 16px; 
-        }
-        .menu-item { 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            background-color: white; 
-            padding: 15px 10px; 
-            border-bottom: 1px solid #eee; 
-            cursor: pointer; /* 提示用户整个行可点击 */
-        }
-        .item-info .name { font-size: 16px; font-weight: bold; margin-bottom: 5px; }
-        .item-info .price { font-size: 14px; color: #666; }
-        .quantity-control { display: flex; align-items: center; }
-        .control-btn { 
-            width: 30px; 
-            height: 30px; 
-            border-radius: 50%; 
-            border: 1px solid #FF8C00; 
-            background-color: white; 
-            color: #FF8C00; 
-            font-size: 20px; 
-            line-height: 28px; 
-            text-align: center; 
-            cursor: pointer; 
-            padding: 0; 
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1); 
-            touch-action: manipulation; /* 优化快速点击，防止缩放 */
-        }
-        .control-btn.add { 
-            background-color: #FF4500; 
-            color: white; 
-            border: none; 
-        }
-        .quantity { margin: 0 10px; width: 20px; text-align: center; font-size: 16px; font-weight: bold; }
-        .quantity-control.hidden .minus-btn, .quantity-control.hidden .quantity { visibility: hidden; }
-        .bottom-bar { 
+        /* --- 顶部导航 --- */
+        .top-nav { 
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
@@ -134,128 +32,277 @@
             color: white; 
             position: fixed; 
             width: 100%; 
-            bottom: 0; 
+            top: 0; 
             box-sizing: border-box; 
-            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1); 
-            z-index: 15; /* 确保在最上层，但低于 modal */
+            z-index: 10; 
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15); 
+            flex-wrap: nowrap;
         }
-        /* 修改: 让查看订单按钮和顶部按钮保持一致的红色风格 */
-        .view-order-btn {
-            background-color: #FF4500; /* 强调色：橙红色 */
+        
+        .left-controls {
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            gap: 10px;
+            overflow: hidden;
+        }
+        
+        #table-display {
+            background-color: #FF4500;
+            color: white; 
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px; 
+            font-size: 15px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            white-space: nowrap;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        #table-notes-input {
+            flex-grow: 1;
+            padding: 8px 10px;
+            border: 1px solid rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.9);
+            border-radius: 8px;
+            font-size: 16px;
+            color: #333;
+            max-width: 160px;
+            transition: all 0.3s;
+        }
+        #table-notes-input:focus {
+            background: white;
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.5);
+            outline: none;
+        }
+
+        .right-buttons button { 
+            background-color: #FF4500;
             color: white; 
             border: none; 
-            padding: 10px 15px; /* 稍微大一点，以适应底部栏 */
-            border-radius: 5px; 
+            padding: 8px 12px;
+            border-radius: 8px; 
+            font-size: 14px; 
+            font-weight: bold;
+            cursor: pointer; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        /* --- 菜单列表 --- */
+        .menu-container { margin-top: 65px; opacity: 0; transition: opacity 0.3s ease; }
+        .menu-container.loaded { opacity: 1; } /* 数据加载完淡入 */
+
+        .category-header { 
+            background-color: #fff5e6; /* 更柔和的背景 */
+            color: #FF8C00;
+            padding: 12px 15px; 
+            margin-top: 0; 
+            font-weight: 800; 
+            font-size: 17px; 
+            position: sticky; /* 标题吸顶效果 */
+            top: 60px;
+            z-index: 5;
+            border-bottom: 1px solid #ffe0b2;
+        }
+        .menu-item { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            background-color: white; 
+            padding: 16px 15px; 
+            border-bottom: 1px solid #f0f0f0; 
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .item-info .name { font-size: 17px; font-weight: 600; margin-bottom: 4px; color: #222; }
+        .item-info .price { font-size: 14px; color: #888; }
+        
+        .quantity-control { display: flex; align-items: center; }
+        .control-btn { 
+            width: 32px; 
+            height: 32px; 
+            border-radius: 50%; 
+            border: 1px solid #FF8C00; 
+            background-color: white; 
+            color: #FF8C00; 
+            font-size: 22px; 
+            line-height: 28px; 
+            text-align: center; 
+            cursor: pointer; 
+            padding: 0; 
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05); 
+            font-family: monospace; /* 保证加减号居中 */
+        }
+        .control-btn.add { 
+            background-color: #FF8C00; 
+            color: white; 
+            border: none; 
+        }
+        .quantity { margin: 0 12px; min-width: 20px; text-align: center; font-size: 17px; font-weight: bold; color: #333; }
+        .quantity-control.hidden .minus-btn, .quantity-control.hidden .quantity { visibility: hidden; pointer-events: none; }
+
+        /* --- 底部栏 --- */
+        .bottom-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 10px 20px; 
+            background-color: white; /* 改为白色背景更清爽 */
+            border-top: 1px solid #eee;
+            position: fixed; 
+            width: 100%; 
+            bottom: 0; 
+            box-sizing: border-box; 
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08); 
+            z-index: 15;
+            padding-bottom: max(10px, env(safe-area-inset-bottom)); /* 适配 iPhone X 底部 */
+        }
+        .total-display { font-size: 16px; color: #333; font-weight: 600; }
+        .total-display span { color: #FF4500; font-size: 1.2em; }
+        
+        .view-order-btn {
+            background: linear-gradient(135deg, #FF8C00, #FF4500); /* 渐变色按钮 */
+            color: white; 
+            border: none; 
+            padding: 12px 25px; 
+            border-radius: 25px; /* 圆角胶囊样式 */
             font-size: 16px; 
             cursor: pointer; 
-            transition: opacity 0.2s; 
             font-weight: bold;
+            box-shadow: 0 4px 10px rgba(255, 69, 0, 0.3);
         }
-        /* Modal Styles */
-        .modal { display: none; position: fixed; z-index: 20; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; background-color: rgba(0, 0, 0, 0.7); justify-content: center; align-items: center; }
-        .modal-content { background-color: #fefefe; padding: 20px; border-radius: 10px; width: 80%; max-width: 400px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); text-align: center; }
-        .modal-content h2 { color: #FF4500; margin-top: 0; }
-        .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
-        .table-number-btn { padding: 15px 10px; background-color: #eee; border: 1px solid #ccc; border-radius: 5px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        .table-number-btn.occupied { background-color: #4CAF50; color: white; border-color: #45a049; } 
-        .table-number-btn.selected { background-color: #FF8C00; color: white; border-color: #FF4500; } 
-        .table-number-btn.selected.occupied { background-color: #FF8C00; border-color: #FF4500; }
-        .close-btn { background-color: #FF4500; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        
-        /* --- 🌟 核心优化：订单详情弹窗布局 --- */
-        .order-modal-content { 
-            background-color: white; 
-            /* 移除原来的 padding，由子元素控制，以便滚动时不留白 */
-            padding: 0; 
+
+        /* --- Modal (弹窗) 动画优化 --- */
+        .modal { 
+            display: none; 
+            position: fixed; 
+            z-index: 20; 
+            left: 0; top: 0; 
+            width: 100%; height: 100%; 
+            overflow: hidden; 
+            background-color: rgba(0, 0, 0, 0.6); /* 加深遮罩 */
+            justify-content: center; 
+            align-items: center; 
+            opacity: 0; /* 初始透明 */
+            transition: opacity 0.2s ease; /* 淡入淡出 */
+        }
+        .modal.show { opacity: 1; } /* 显示状态 */
+
+        .modal-content, .order-modal-content { 
+            background-color: #fff; 
+            padding: 20px; 
+            border-radius: 16px; /* 更圆润 */
+            width: 85%; 
+            max-width: 400px; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); 
+            text-align: center; 
+            transform: scale(0.9); /* 初始缩小 */
+            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* 弹性弹出动画 */
+        }
+        .modal.show .modal-content, .modal.show .order-modal-content { transform: scale(1); }
+
+        /* 桌号选择网格 */
+        .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px; }
+        .table-number-btn { 
+            padding: 15px 5px; 
+            background-color: #f5f5f7; 
+            border: 1px solid #e0e0e0; 
             border-radius: 10px; 
-            width: 90%; 
+            font-size: 18px; 
+            font-weight: bold; 
+            color: #333;
+        }
+        .table-number-btn.occupied { background-color: #e8f5e9; color: #2e7d32; border-color: #c8e6c9; } 
+        .table-number-btn.selected { background-color: #fff3e0; color: #ef6c00; border-color: #ffb74d; box-shadow: 0 0 0 2px #FF8C00; } 
+        .close-btn { background-color: #f5f5f5; color: #333; padding: 12px 20px; border: none; border-radius: 10px; font-weight: bold; font-size: 15px; width: 100%; }
+
+        /* --- 订单详情优化 (继承上一次的布局，加入视觉优化) --- */
+        .order-modal-content { 
+            padding: 0; 
             max-width: 500px; 
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); 
-            text-align: left;
-            
-            /* Flex 布局：实现头部底部固定，中间滚动 */
             display: flex;
             flex-direction: column;
-            max-height: 85vh; /* 限制最大高度为屏幕的 85% */
-            overflow: hidden; /* 防止整个卡片出现双重滚动条 */
+            max-height: 85vh; 
+            text-align: left;
         }
-        
-        /* 固定的头部区域 */
         .order-modal-header-section {
-            padding: 20px 20px 5px 20px;
-            flex-shrink: 0; /* 不许压缩 */
+            padding: 20px 20px 10px;
             background-color: white;
-            border-radius: 10px 10px 0 0;
-            z-index: 2;
+            border-radius: 16px 16px 0 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .order-scrollable-area {
+            flex-grow: 1; 
+            overflow-y: auto; 
+            padding: 10px 20px;
+            background-color: #fafafa;
+        }
+        .order-modal-footer-section {
+            padding: 15px 20px 20px;
+            background-color: white;
+            border-top: 1px solid #f0f0f0;
+            border-radius: 0 0 16px 16px;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.03);
         }
         
-        /* 可滚动的中间区域 */
-        .order-scrollable-area {
-            flex-grow: 1; /* 占据剩余空间 */
-            overflow-y: auto; /* 允许垂直滚动 */
-            padding: 5px 20px;
-            -webkit-overflow-scrolling: touch; /* iOS 平滑滚动 */
-            border-top: 1px dashed #eee;
-            border-bottom: 1px dashed #eee;
-        }
-
-        /* 固定的底部区域 */
-        .order-modal-footer-section {
-            padding: 10px 20px 20px 20px;
-            flex-shrink: 0; /* 不许压缩 */
-            background-color: #f9f9f9; /* 稍微变灰，区分底部 */
-            border-top: 1px solid #eee;
-            border-radius: 0 0 10px 10px;
-            z-index: 2;
-        }
-
-        /* 订单操作栏布局 */
-        .order-actions { 
+        /* 订单详情列表项 */
+        .order-item-li {
             display: flex; 
             justify-content: space-between; 
             align-items: center;
-            margin-top: 15px; 
-        }
-        .order-actions button { 
-            padding: 12px 15px; 
-            border: none; 
-            border-radius: 5px; 
-            font-weight: bold; 
-            cursor: pointer; 
+            padding: 12px 0; 
+            border-bottom: 1px dashed #e0e0e0;
             font-size: 16px;
-            flex-grow: 0; 
-            white-space: nowrap; 
         }
-        .checkout-btn { background-color: #34c759; color: white; }
-        .clear-btn { background-color: #FF8C00; color: white; }
-        .close-order-btn { background-color: #ddd; color: #333; }
         
-        .order-total-display {
-            font-size: 1.4em;
-            font-weight: bold;
-            color: #FF4500;
-            text-align: right;
-            margin-bottom: 5px;
-        }
+        .order-actions { display: flex; justify-content: space-between; margin-top: 15px; gap: 10px; }
+        .order-actions button { flex: 1; padding: 12px 0; border-radius: 10px; font-size: 15px; }
+        .checkout-btn { background-color: #34c759; color: white; box-shadow: 0 4px 10px rgba(52, 199, 89, 0.3); }
+        .clear-btn { background-color: #ff3b30; color: white; } /* 红色清空 */
+        .close-order-btn { background-color: #f2f2f7; color: #333; }
 
-        /* 菜单列表顶部间距调整 */
-        .menu-container { margin-top: 60px; }
-        /* 新增加载层样式 */
-        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.9); color: #FF8C00; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; z-index: 1000; transition: opacity 0.3s; }
+        /* Loading Overlay (现在只在首次无缓存时显示) */
+        #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #f4f4f4; color: #FF8C00; display: flex; justify-content: center; align-items: center; font-size: 18px; font-weight: bold; z-index: 1000; transition: opacity 0.4s; }
+        
+        /* 保存指示器 */
+        #saveIndicator { 
+            position: fixed; 
+            top: 60px; 
+            right: 15px; 
+            background: rgba(0,0,0,0.7); 
+            color: white; 
+            padding: 5px 10px; 
+            border-radius: 20px; 
+            font-size: 12px; 
+            z-index: 99; 
+            opacity: 0; 
+            transition: opacity 0.3s; 
+            pointer-events: none;
+        }
+        #saveIndicator.show { opacity: 1; }
+
     </style>
 </head>
 <body>
     
-    <div id="loading-overlay" style="display: flex;"> 加载数据... 🚀 </div>
+    <div id="loading-overlay">
+        <div style="text-align: center;">
+            <div style="font-size: 40px; margin-bottom: 10px;">🚀</div>
+            <div>正在同步数据...</div>
+        </div>
+    </div>
+    
+    <div id="saveIndicator">☁️ 已同步</div>
 
     <header class="top-nav">
         <div class="left-controls">
-            <div id="table-display">桌号: 1</div>
-            <input type="text" id="table-notes-input" placeholder="备注">
-            <span id="saveIndicator" style="color: #FFE4B5; font-size: 14px; margin-left: 10px;"></span>
+            <div id="table-display">桌号 1 ▾</div>
+            <input type="text" id="table-notes-input" placeholder="添加备注...">
         </div>
         <div class="right-buttons">
-            <button id="settingsBtn">设置</button>
+            <button id="settingsBtn">⚙️ 设置</button>
         </div>
     </header>
 
@@ -263,77 +310,73 @@
         </main>
 
     <footer class="bottom-bar">
-        <div class="total-display">总计: <span id="totalPrice">0</span> Ks</div>
-        <div class="total-display">已点: <span id="orderCount">0</span> 份</div>
+        <div>
+            <div class="total-display">总计: <span id="totalPrice">0</span> Ks</div>
+            <div style="font-size: 12px; color: #999; margin-top: 2px;">已点 <span id="orderCount" style="color: #666; font-size: 1em;">0</span> 份</div>
+        </div>
         <button class="view-order-btn" id="viewOrderBtn">查看订单</button>
     </footer>
 
     <div id="tableModal" class="modal">
         <div class="modal-content">
-            <h2>请选择桌号</h2>
-            <div id="tableGrid" class="table-grid">
-                </div>
-            <button id="closeModalBtn" class="close-btn">关闭</button>
+            <h2 style="margin-bottom: 20px; color: #333;">选择桌号</h2>
+            <div id="tableGrid" class="table-grid"></div>
+            <button id="closeModalBtn" class="close-btn">取消</button>
         </div>
     </div>
 
     <div id="orderModal" class="modal">
         <div class="order-modal-content">
-            
             <div class="order-modal-header-section">
-                <div class="order-header">
-                    <div class="order-title" id="orderModalTitle" style="font-size: 1.2em; font-weight: bold; color: #333;">桌号: N/A</div>
-                </div>
-                <div id="orderModalNotes" style="font-style: italic; color: #FF4500; margin-bottom: 5px; font-size: 0.9em;"></div>
+                <div class="order-title" id="orderModalTitle" style="font-size: 1.3em; font-weight: 800; color: #333;">桌号: N/A</div>
+                <div id="orderModalNotes" style="font-style: italic; color: #FF4500; margin-top: 5px; font-size: 0.9em;"></div>
             </div>
 
             <div class="order-scrollable-area" id="orderDetailsContent">
                 </div>
 
             <div class="order-modal-footer-section">
-                <div class="order-total-display" id="orderModalTotal">总额: 0 Ks</div>
+                <div class="order-total-display" id="orderModalTotal" style="text-align:right; font-size: 1.5em; font-weight: 800; color: #FF4500; margin-bottom: 15px;">0 Ks</div>
                 <div class="order-actions">
+                    <button class="close-order-btn" id="orderCloseBtn">关闭</button>
+                    <button class="clear-btn" id="clearOrderBtn">清空</button>
                     <button class="checkout-btn" id="checkoutBtn">结算</button>
-                    
-                    <div style="display: flex; gap: 10px;">
-                        <button class="clear-btn" id="clearOrderBtn">清空</button>
-                        <button class="close-order-btn" id="orderCloseBtn">关闭</button>
-                    </div>
                 </div>
             </div>
-
         </div>
     </div>
     
     <div id="settingsModal" class="modal">
         <div class="modal-content" style="max-width: 300px;">
-            <h2>⚙️ 设置与管理</h2>
-            <div id="settingsGrid" style="display: flex; flex-direction: column; gap: 15px; margin-bottom: 20px;">
-                <button id="modalEditMenuBtn" style="padding: 15px; background-color: #f7f7f7; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;">✏️ 编辑菜单</button>
-                <button id="modalIncomeSummaryBtn" style="padding: 15px; background-color: #f7f7f7; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;">💰 收入汇总</button>
-                <button id="modalPurchaseManagerBtn" style="padding: 15px; background-color: #f7f7f7; border: 1px solid #ccc; border-radius: 5px; font-size: 16px;">🛒 采购管理</button>
+            <h2 style="margin-bottom: 20px;">⚙️ 管理后台</h2>
+            <div id="settingsGrid" style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                <button id="modalEditMenuBtn" style="padding: 16px; background-color: #f9f9f9; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; text-align: left;">📝 编辑菜单</button>
+                <button id="modalIncomeSummaryBtn" style="padding: 16px; background-color: #f9f9f9; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; text-align: left;">💰 收入汇总</button>
+                <button id="modalPurchaseManagerBtn" style="padding: 16px; background-color: #f9f9f9; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; text-align: left;">🛒 采购管理</button>
             </div>
             <button id="settingsCloseBtn" class="close-btn">关闭</button>
         </div>
     </div>
 
     <script>
-        // --- Cloud Sync Configuration ---
+        // --- Cloud Config ---
         const JSONBIN_ID = '69174442ae596e708f5901ae'; 
         const JSONBIN_MASTER_KEY = '$2a$10$ol9N5tLV0G2AnDYaF4sO4O2l0RoR8OSXagA4IUy2wiwdntZDuzRh2';
         const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
+        const CACHE_KEY = 'bbq_app_local_cache'; // 本地缓存的 Key
 
+        // 数据结构
         let globalCloudData = {
             menu_data: [],
             table_orders: {}, 
             income_data: { total: 0, closedOrders: [] },
             purchase_data: { productTemplate: {}, cartData: [] }
         };
-        
         let menuItems = [];
         let tableOrders = new Map(); 
+        let currentTableNumber = '1'; // 默认桌号
 
-        // --- Debounce Utility ---
+        // --- 性能工具 ---
         function debounce(fn, wait) {
             let timeout;
             return function(...args) {
@@ -343,8 +386,36 @@
             };
         }
 
-        // --- Cloud Utilities ---
-        async function loadCloudData() {
+        // --- 核心：本地缓存逻辑 (让 APP 飞起来的关键) ---
+        function loadFromLocalCache() {
+            const cached = localStorage.getItem(CACHE_KEY);
+            if (cached) {
+                try {
+                    const data = JSON.parse(cached);
+                    console.log("🚀 已从本地缓存加载数据 (0ms延迟)");
+                    return data;
+                } catch (e) {
+                    console.error("缓存解析失败", e);
+                }
+            }
+            return null;
+        }
+
+        function saveToLocalCache(data) {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+        }
+
+        // --- 数据加载 (缓存优先策略) ---
+        async function loadData() {
+            // 1. 先尝试加载本地缓存 (立即渲染)
+            const localData = loadFromLocalCache();
+            if (localData) {
+                applyData(localData);
+                document.getElementById('loading-overlay').style.display = 'none'; // 只要有缓存，立刻隐藏 loading
+                document.querySelector('.menu-container').classList.add('loaded');
+            }
+
+            // 2. 后台静默同步云端数据
             try {
                 const response = await fetch(JSONBIN_URL + '/latest', {
                     method: 'GET',
@@ -354,60 +425,86 @@
                     }
                 });
                 
-                if (!response.ok) {
-                    throw new Error(`Cloud fetch failed: ${response.statusText}`);
-                }
+                if (!response.ok) throw new Error('Network response was not ok');
                 
-                const data = await response.json();
-                
-                if (data.record) {
-                    globalCloudData = data.record;
-                    if (!globalCloudData.menu_data) globalCloudData.menu_data = [];
-                    if (!globalCloudData.table_orders) globalCloudData.table_orders = {};
-                    if (!globalCloudData.income_data) globalCloudData.income_data = { total: 0, closedOrders: [] };
-                    if (!globalCloudData.purchase_data) globalCloudData.purchase_data = { productTemplate: {}, cartData: [] };
+                const cloudResponse = await response.json();
+                const cloudRecord = cloudResponse.record;
 
-                    menuItems = globalCloudData.menu_data;
-                    
-                    tableOrders = new Map();
-                    for (const [tableNum, orderData] of Object.entries(globalCloudData.table_orders)) {
-                        if (Array.isArray(orderData)) {
-                             tableOrders.set(tableNum, { items: orderData, notes: '' });
-                        } else {
-                            if (!orderData.items) orderData.items = [];
-                            if (typeof orderData.notes !== 'string') orderData.notes = '';
-                            tableOrders.set(tableNum, orderData);
-                        }
-                    }
-                    console.log("加载成功。");
-                } else {
-                    console.warn("云端数据结构不完整或为空，使用默认结构。", data);
+                // 3. 更新本地数据并刷新 UI (只有当云端数据存在时)
+                if (cloudRecord) {
+                    console.log("☁️ 云端数据已同步");
+                    applyData(cloudRecord);
+                    saveToLocalCache(cloudRecord); // 更新缓存
                 }
+
             } catch (error) {
-                console.error("加载云端数据失败，使用本地默认数据。", error);
-                alert("加载失败！请检查 网络。");
+                console.warn("⚠️ 云端同步失败，继续使用本地数据 (离线模式)", error);
+                if (!localData) {
+                    alert("首次加载需要网络，请检查连接！");
+                }
+            } finally {
+                document.getElementById('loading-overlay').style.opacity = '0';
+                setTimeout(() => document.getElementById('loading-overlay').style.display = 'none', 400);
+                document.querySelector('.menu-container').classList.add('loaded');
             }
         }
 
-        async function saveCloudData() {
-            globalCloudData.menu_data = menuItems;
+        function applyData(data) {
+            globalCloudData = data;
+            // 补全缺少的字段
+            if (!globalCloudData.menu_data) globalCloudData.menu_data = [];
+            if (!globalCloudData.table_orders) globalCloudData.table_orders = {};
+            if (!globalCloudData.income_data) globalCloudData.income_data = { total: 0, closedOrders: [] };
             
-            // 转换 tableOrders Map 为 Object 以便保存
+            menuItems = globalCloudData.menu_data;
+            
+            // 转换 Object -> Map
+            tableOrders = new Map();
+            for (const [tableNum, orderData] of Object.entries(globalCloudData.table_orders)) {
+                if (Array.isArray(orderData)) {
+                     tableOrders.set(tableNum, { items: orderData, notes: '' });
+                } else {
+                    if (!orderData.items) orderData.items = [];
+                    tableOrders.set(tableNum, orderData);
+                }
+            }
+            
+            // 渲染界面
+            renderMenu();
+            // 恢复当前桌号状态
+            if(!tableOrders.has(currentTableNumber)) {
+                tableOrders.set(currentTableNumber, { items: [], notes: '' });
+            }
+            const currentData = tableOrders.get(currentTableNumber);
+            document.getElementById('table-notes-input').value = currentData.notes || '';
+            
+            updateTotals();
+            updateTableStatus();
+        }
+
+        // --- 数据保存 (双写策略：先存本地，后存云端) ---
+        async function saveCloudData() {
+            const indicator = document.getElementById('saveIndicator');
+            indicator.textContent = '☁️ 同步中...';
+            indicator.classList.add('show');
+
+            // 1. 准备数据
+            globalCloudData.menu_data = menuItems;
             const storableTableOrders = {};
             for (const [tableNum, data] of tableOrders.entries()) {
-                // 只保存有订单项或有备注的桌号
                 if (data.items.length > 0 || data.notes) {
                     storableTableOrders[tableNum] = data;
                 }
             }
             globalCloudData.table_orders = storableTableOrders;
 
-            const saveIndicator = document.getElementById('saveIndicator');
-            if (saveIndicator) saveIndicator.textContent = '☁️ 正在保存...';
+            // 2. 立即保存到本地缓存 (极速)
+            saveToLocalCache(globalCloudData);
 
+            // 3. 发送云端请求
             try {
                 const response = await fetch(JSONBIN_URL, {
-                    method: 'PUT', // 使用 PUT 更新整个 Bin
+                    method: 'PUT',
                     headers: {
                         'X-Master-Key': JSONBIN_MASTER_KEY,
                         'Content-Type': 'application/json'
@@ -415,428 +512,313 @@
                     body: JSON.stringify(globalCloudData)
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Cloud save failed: ${response.statusText}`);
-                }
+                if (!response.ok) throw new Error('Save failed');
                 
-                const result = await response.json();
-                console.log("已成功同步。", result);
-                if (saveIndicator) {
-                    saveIndicator.textContent = '✅ 已同步';
-                    setTimeout(() => saveIndicator.textContent = '', 2000);
-                }
+                indicator.textContent = '✅ 已同步';
+                setTimeout(() => indicator.classList.remove('show'), 2000);
                 return true;
             } catch (error) {
-                console.error("保存数据失败。", error);
-                alert("数据保存失败！请检查 JSONBin 配置或网络。");
-                if (saveIndicator) {
-                    saveIndicator.textContent = '❌ 保存失败';
-                }
-                return false;
+                console.error("Save Error", error);
+                indicator.textContent = '⚠️ 仅本地保存';
+                setTimeout(() => indicator.classList.remove('show'), 3000);
+                return false; // 虽然云端失败，但本地已保存，用户体验不受影响
             }
         }
         
-        // 创建一个防抖版本的保存函数 (500毫秒延迟)
-        const debouncedSaveCloudData = debounce(saveCloudData, 500);
+        const debouncedSaveCloudData = debounce(saveCloudData, 1000); // 延长防抖时间，减少请求次数
 
-        // --- 核心逻辑 ---
-        const totalTableCount = 12;
-        const menuContainer = document.querySelector('.menu-container');
-        const totalPriceElement = document.getElementById('totalPrice');
-        const orderCountElement = document.getElementById('orderCount');
-        const tableModal = document.getElementById('tableModal');
-        const orderModal = document.getElementById('orderModal');
-        const settingsModal = document.getElementById('settingsModal'); 
-        const tableDisplay = document.getElementById('table-display');
-        const tableNotesInput = document.getElementById('table-notes-input'); 
-        let currentTableNumber = null;
-        
-        function findItemInCurrentOrder(id) {
-            if (!currentTableNumber || !tableOrders.has(currentTableNumber)) return null;
-            return tableOrders.get(currentTableNumber).items.find(item => item.id === id);
-        }
-        
-        function calculateOrderTotal(orderData) { return orderData.items.reduce((total, item) => total + (item.price * item.quantity), 0); }
-        function calculateOrderCount(orderData) { return orderData.items.reduce((count, item) => count + item.quantity, 0); }
+        // --- 业务逻辑 (保持不变，微调 UI 调用) ---
         
         function getLatestMenuStructure() {
             const latestMenu = globalCloudData.menu_data || [];
             const categories = [...new Set(latestMenu.map(item => item.category))];
-            
             return { latestMenu, categories };
         }
-        
-        // 切换桌号逻辑
-        function selectNewTable(tableNumber) {
-            currentTableNumber = tableNumber;
-            tableDisplay.textContent = `桌号: ${tableNumber}`;
-            
-            if (!tableOrders.has(tableNumber)) {
-                tableOrders.set(tableNumber, { items: [], notes: '' }); 
-            }
-            
-            const currentOrderData = tableOrders.get(tableNumber);
-            tableNotesInput.value = currentOrderData.notes;
-            
-            renderMenu();
-            updateTotals();
-            updateTableStatus();
-            hideModal(tableModal);
-        }
 
-        // 渲染桌号网格
-        function renderTableGrid() {
-            const tableGrid = document.getElementById('tableGrid');
-            tableGrid.innerHTML = '';
-            
-            for (let i = 1; i <= totalTableCount; i++) {
-                const tableNum = String(i);
-                const isOccupied = tableOrders.has(tableNum) && tableOrders.get(tableNum).items.length > 0;
-                const isSelected = tableNum === currentTableNumber;
-                
-                const button = document.createElement('button');
-                button.textContent = `桌号 ${i}`;
-                button.className = 'table-number-btn';
-                if (isOccupied) {
-                    button.classList.add('occupied');
-                }
-                if (isSelected) {
-                    button.classList.add('selected');
-                }
-                
-                button.onclick = () => selectNewTable(tableNum);
-                tableGrid.appendChild(button);
-            }
-        }
-        
-        // 渲染菜单 
         function renderMenu() {
             const { latestMenu, categories } = getLatestMenuStructure();
-            menuContainer.innerHTML = '';
+            const container = document.querySelector('.menu-container');
             
+            // 简单的 Diff 算法：如果 HTML 没变就不重新渲染，防止闪烁 (这里简化为直接覆盖，因为有了 Virtual Scroll 的思路但列表不大)
+            // 实际优化：只更新数量
+            
+            let html = '';
             if (latestMenu.length === 0) {
-                menuContainer.innerHTML = '<p style="text-align: center; color: #666; padding: 50px;">菜单为空，请先在 "编辑菜单" 中添加菜品。</p>';
-                return;
-            }
-
-            categories.forEach(category => {
-                const header = document.createElement('h3');
-                header.className = 'category-header';
-                header.textContent = category;
-                menuContainer.appendChild(header);
-
-                const items = latestMenu.filter(item => item.category === category);
-                items.forEach(item => {
-                    const orderItem = findItemInCurrentOrder(item.id);
-                    const quantity = orderItem ? orderItem.quantity : 0;
-                    
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'menu-item';
-                    itemDiv.setAttribute('data-id', item.id); // 关键：给整个菜单项添加ID
-                    itemDiv.innerHTML = `
-                        <div class="item-info">
-                            <div class="name">${item.name}</div>
-                            <div class="price">${item.price.toLocaleString()} Ks</div>
-                        </div>
-                        <div class="quantity-control ${quantity === 0 ? 'hidden' : ''}">
-                            <button class="control-btn minus-btn" data-id="${item.id}">-</button>
-                            <span class="quantity">${quantity}</span>
-                            <button class="control-btn add add-btn" data-id="${item.id}">+</button>
-                        </div>
-                    `;
-                    menuContainer.appendChild(itemDiv);
+                html = '<div style="text-align: center; padding: 40px; color: #999;">暂无菜品，请去设置里添加</div>';
+            } else {
+                categories.forEach(category => {
+                    html += `<h3 class="category-header">${category}</h3>`;
+                    const items = latestMenu.filter(item => item.category === category);
+                    items.forEach(item => {
+                        const currentOrder = tableOrders.get(currentTableNumber);
+                        const orderItem = currentOrder ? currentOrder.items.find(i => i.id === item.id) : null;
+                        const quantity = orderItem ? orderItem.quantity : 0;
+                        
+                        html += `
+                        <div class="menu-item" data-id="${item.id}">
+                            <div class="item-info">
+                                <div class="name">${item.name}</div>
+                                <div class="price">${item.price.toLocaleString()} Ks</div>
+                            </div>
+                            <div class="quantity-control ${quantity === 0 ? 'hidden' : ''}">
+                                <button class="control-btn minus-btn" data-id="${item.id}">-</button>
+                                <span class="quantity" id="qty-${item.id}">${quantity}</span>
+                                <button class="control-btn add add-btn" data-id="${item.id}">+</button>
+                            </div>
+                        </div>`;
+                    });
                 });
-            });
-        }
-        
-        // 集中处理菜单交互 (事件委托)
-        function bindMenuInteractions() {
-            menuContainer.addEventListener('click', async (e) => {
-                if (currentTableNumber === null) {
-                    alert('请先选择桌号！');
-                    renderTableGrid();
-                    showModal(tableModal);
-                    return;
-                }
-
-                let target = e.target;
-                let itemId = null;
-                let change = 0;
-
-                // 1. 处理 +/- 按钮点击 (减号只应该在这里处理)
-                if (target.classList.contains('control-btn')) {
-                    // 关键：阻止事件冒泡到父级菜单项，避免一次点击导致两次增加
-                    e.stopPropagation(); 
-                    itemId = target.getAttribute('data-id');
-                    change = target.classList.contains('add') ? 1 : -1;
-                } 
-                // 2. 处理菜单项行点击 (名称, 价格, 空白处)
-                else {
-                    const menuItem = target.closest('.menu-item');
-                    if (menuItem) {
-                        itemId = menuItem.getAttribute('data-id');
-                        change = 1; // 整个行点击默认是 +1
-                    }
-                }
-                
-                if (itemId && change !== 0) {
-                    await updateQuantity(itemId, change);
-                }
-            });
-        }
-
-
-        // 更新数量逻辑 (已添加震动反馈)
-        async function updateQuantity(id, change) {
-            
-            // 🌟 关键：震动反馈代码 (在支持的设备上生效)
-            if (navigator.vibrate) {
-                // 50毫秒的短震动，提供轻微的反馈感
-                navigator.vibrate(50); 
             }
+            container.innerHTML = html;
+        }
+
+        // 极速更新数量 (不重绘整个菜单，只更新数字)
+        function updateQuantityUI(id, newQuantity) {
+            const qtySpan = document.getElementById(`qty-${id}`);
+            if (qtySpan) {
+                qtySpan.textContent = newQuantity;
+                const controlDiv = qtySpan.parentElement;
+                if (newQuantity > 0) {
+                    controlDiv.classList.remove('hidden');
+                } else {
+                    controlDiv.classList.add('hidden');
+                }
+            }
+        }
+
+        async function handleQuantityChange(id, change) {
+            // 触觉反馈
+            if (navigator.vibrate) navigator.vibrate(10);
 
             const currentOrderData = tableOrders.get(currentTableNumber);
-            let currentItems = currentOrderData.items; 
+            if (!currentOrderData) return;
+            
+            let currentItems = currentOrderData.items;
             const menu = getLatestMenuStructure().latestMenu;
             const itemDetails = menu.find(item => item.id === id);
             
             if (!itemDetails) return;
 
             let orderItem = currentItems.find(item => item.id === id);
+            let newQty = 0;
 
             if (orderItem) {
                 orderItem.quantity += change;
+                newQty = orderItem.quantity;
                 if (orderItem.quantity <= 0) {
                     currentItems = currentItems.filter(item => item.id !== id);
-                    currentOrderData.items = currentItems; 
+                    currentOrderData.items = currentItems;
+                    newQty = 0;
                 }
             } else if (change > 0) {
-                currentItems.push({
-                    id: itemDetails.id,
-                    name: itemDetails.name,
-                    price: itemDetails.price,
-                    quantity: 1
-                });
+                currentItems.push({ ...itemDetails, quantity: 1 });
+                newQty = 1;
             }
             
             if (currentItems.length === 0 && !currentOrderData.notes) {
-                tableOrders.delete(currentTableNumber);
+                // tableOrders.delete(currentTableNumber); // 暂时保留空对象以便输入备注
             }
             
-            // 性能提升点: 使用防抖保存
-            debouncedSaveCloudData(); 
-            
-            // 立即更新 UI，实现乐观更新
-            renderMenu(); 
+            // 1. 立即更新 UI (乐观更新)
+            updateQuantityUI(id, newQty);
             updateTotals();
             updateTableStatus();
+
+            // 2. 延迟保存
+            debouncedSaveCloudData();
         }
 
-        // 更新总计逻辑
         function updateTotals() {
-            const currentOrderData = currentTableNumber ? tableOrders.get(currentTableNumber) || { items: [] } : { items: [] };
-            const total = calculateOrderTotal(currentOrderData);
-            const count = calculateOrderCount(currentOrderData);
+            const data = tableOrders.get(currentTableNumber) || { items: [] };
+            const total = data.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const count = data.items.reduce((sum, item) => sum + item.quantity, 0);
             
-            totalPriceElement.textContent = total.toLocaleString();
-            orderCountElement.textContent = count.toLocaleString();
+            document.getElementById('totalPrice').textContent = total.toLocaleString();
+            document.getElementById('orderCount').textContent = count;
         }
 
-        // 更新桌号状态
         function updateTableStatus() {
-            const tableButton = document.querySelector(`.table-number-btn[onclick*="'${currentTableNumber}'"]`);
-            if (tableButton) {
-                const isOccupied = tableOrders.has(currentTableNumber) && tableOrders.get(currentTableNumber).items.length > 0;
-                tableButton.classList.toggle('occupied', isOccupied);
+             // 仅更新当前按钮状态，不重绘所有
+             const grid = document.getElementById('tableGrid');
+             if(grid.children.length > 0) {
+                 // 简单重绘 Grid (因为只有12个按钮，开销很小)
+                 renderTableGrid(); 
+             }
+             
+             // 更新顶部显示
+             const display = document.getElementById('table-display');
+             display.textContent = `桌号 ${currentTableNumber} ▾`;
+        }
+
+        // --- Modal Logic ---
+        function showModal(modal) {
+            modal.style.display = 'flex';
+            // 强制重绘以触发 transition
+            modal.offsetHeight; 
+            modal.classList.add('show');
+        }
+
+        function hideModal(modal) {
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 200); // 等待动画结束
+        }
+
+        // --- 渲染逻辑 ---
+        function renderTableGrid() {
+            const grid = document.getElementById('tableGrid');
+            grid.innerHTML = '';
+            for (let i = 1; i <= 12; i++) {
+                const tNum = String(i);
+                const hasOrder = tableOrders.has(tNum) && tableOrders.get(tNum).items.length > 0;
+                const isCurrent = tNum === currentTableNumber;
+                
+                const btn = document.createElement('button');
+                btn.className = `table-number-btn ${hasOrder ? 'occupied' : ''} ${isCurrent ? 'selected' : ''}`;
+                btn.textContent = `${i}号`;
+                btn.onclick = () => {
+                    // 切换桌号
+                    currentTableNumber = tNum;
+                    
+                    if (!tableOrders.has(tNum)) {
+                        tableOrders.set(tNum, { items: [], notes: '' });
+                    }
+                    const data = tableOrders.get(tNum);
+                    document.getElementById('table-notes-input').value = data.notes || '';
+                    
+                    renderMenu(); // 重新渲染菜单以显示该桌的数量
+                    updateTotals();
+                    updateTableStatus();
+                    hideModal(document.getElementById('tableModal'));
+                };
+                grid.appendChild(btn);
             }
+        }
+
+        function renderOrderDetails() {
+            const data = tableOrders.get(currentTableNumber) || { items: [], notes: '' };
+            const listContainer = document.getElementById('orderDetailsContent');
+            
+            document.getElementById('orderModalTitle').textContent = `桌号 ${currentTableNumber} - 订单详情`;
+            document.getElementById('orderModalNotes').textContent = data.notes ? `备注: ${data.notes}` : '';
+            
+            if (data.items.length === 0) {
+                listContainer.innerHTML = '<div style="padding:40px; text-align:center; color:#999;">暂无点单</div>';
+                document.getElementById('orderModalTotal').textContent = '0 Ks';
+            } else {
+                let html = '';
+                data.items.forEach(item => {
+                    html += `
+                    <div class="order-item-li">
+                        <span style="font-weight:bold; color:#333;">${item.name}</span>
+                        <span style="color:#666;">x ${item.quantity}</span>
+                        <span style="font-weight:bold;">${(item.price * item.quantity).toLocaleString()} Ks</span>
+                    </div>`;
+                });
+                listContainer.innerHTML = html;
+                const total = data.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
+                document.getElementById('orderModalTotal').textContent = `${total.toLocaleString()} Ks`;
+            }
+            showModal(document.getElementById('orderModal'));
         }
         
-        // 渲染订单详情逻辑 
-        function renderOrderDetails() {
-            const currentOrderData = tableOrders.get(currentTableNumber) || { items: [], notes: '' };
-            const currentItems = currentOrderData.items;
-            const detailsContent = document.getElementById('orderDetailsContent');
-            const totalDisplay = document.getElementById('orderModalTotal');
-            const title = document.getElementById('orderModalTitle');
-            const notesDisplay = document.getElementById('orderModalNotes'); 
-
-            title.textContent = `桌号: ${currentTableNumber} - 订单详情`;
-            notesDisplay.textContent = currentOrderData.notes ? `备注: ${currentOrderData.notes}` : '';
+        // --- Event Listeners ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData(); // 启动
             
-            if (currentItems.length === 0) {
-                detailsContent.innerHTML = '<p style="text-align: center; color: #666;">当前订单为空。</p>';
-                totalDisplay.textContent = '总额: 0 Ks';
-                showModal(orderModal);
-                return;
-            }
-
-            let html = '<ul style="list-style-type: none; padding: 0; margin: 0;">';
-            currentItems.forEach(item => {
-                html += `
-                    <li style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #eee;">
-                        <span style="font-weight: bold;">${item.name}</span>
-                        <span style="flex-grow: 1; text-align: center;">x ${item.quantity}</span>
-                        <span>${(item.price * item.quantity).toLocaleString()} Ks</span>
-                    </li>
-                `;
-            });
-            html += '</ul>';
-            
-            detailsContent.innerHTML = html;
-            totalDisplay.textContent = `总额: ${calculateOrderTotal(currentOrderData).toLocaleString()} Ks`;
-            
-            showModal(orderModal);
-        }
-
-        // 结算逻辑 (将备注存入 income_data)
-        async function checkoutAndSaveIncome() {
-            if (confirm(`确定结算桌号 ${currentTableNumber} 的订单吗？`)) {
-                // 在进行同步保存前，确保取消所有挂起的防抖保存
-                clearTimeout(debouncedSaveCloudData.timeout);
+            // 菜单点击代理
+            document.querySelector('.menu-container').addEventListener('click', (e) => {
+                let target = e.target;
                 
-                const currentOrderData = tableOrders.get(currentTableNumber) || { items: [], notes: '' };
-                const currentItems = currentOrderData.items;
-
-                if (currentItems.length === 0) {
-                    alert('订单为空，无需结算。');
-                    hideModal(orderModal);
+                // 找到最近的 menu-item 或者是 control-btn
+                const btn = target.closest('.control-btn');
+                if (btn) {
+                    e.stopPropagation();
+                    const id = btn.dataset.id;
+                    const change = btn.classList.contains('add') ? 1 : -1;
+                    handleQuantityChange(id, change);
                     return;
                 }
                 
-                const total = calculateOrderTotal(currentOrderData);
-                const closedRecord = {
-                    table: currentTableNumber,
-                    items: JSON.parse(JSON.stringify(currentItems)), 
-                    notes: currentOrderData.notes, 
-                    total: total,
-                    timestamp: new Date().toISOString()
-                };
-
-                // 1. 更新收入数据
-                globalCloudData.income_data.total += total;
-                globalCloudData.income_data.closedOrders.push(closedRecord);
-                
-                // 2. 清空当前桌的订单和备注
-                tableOrders.delete(currentTableNumber);
-                tableNotesInput.value = ''; 
-                
-                // 3. 同步到云端 (必须等待完成)
-                const saved = await saveCloudData();
-
-                if (saved) {
-                    alert(`桌号 ${currentTableNumber} 结算成功！收入: ${total.toLocaleString()} Ks`);
-                    hideModal(orderModal);
-                    renderMenu();
-                    updateTotals();
-                    renderTableGrid(); 
+                const itemRow = target.closest('.menu-item');
+                if (itemRow) {
+                    const id = itemRow.dataset.id;
+                    handleQuantityChange(id, 1); // 点击行默认+1
                 }
-            }
-        }
+            });
 
-        // 清空订单逻辑 (清空 items 和 notes)
-        async function resetOrder() {
-            if (confirm(`确定要清空桌号 ${currentTableNumber} 的订单和备注吗？`)) {
-                // 在进行同步保存前，确保取消所有挂起的防抖保存
-                clearTimeout(debouncedSaveCloudData.timeout);
-                
-                // 清空当前桌的订单和备注
-                tableOrders.delete(currentTableNumber);
-                tableNotesInput.value = ''; 
-
-                // 同步到云端 (必须等待完成)
-                const saved = await saveCloudData();
-
-                if (saved) {
-                    alert(`桌号 ${currentTableNumber} 的订单已清空。`);
-                    hideModal(orderModal);
-                    renderMenu();
-                    updateTotals();
-                    renderTableGrid(); 
+            // 备注输入
+            document.getElementById('table-notes-input').addEventListener('input', (e) => {
+                const data = tableOrders.get(currentTableNumber);
+                if(data) {
+                    data.notes = e.target.value;
+                    debouncedSaveCloudData();
                 }
-            }
-        }
-        
-        function showModal(modalElement) { modalElement.style.display = 'flex'; }
-        function hideModal(modalElement) { modalElement.style.display = 'none'; }
+            });
 
-
-        // --- 事件绑定和初始化 ---
-        function bindEventListeners() {
+            // 模态框触发
+            document.getElementById('table-display').onclick = () => {
+                renderTableGrid();
+                showModal(document.getElementById('tableModal'));
+            };
+            document.getElementById('closeModalBtn').onclick = () => hideModal(document.getElementById('tableModal'));
             
-            // 设置按钮和模态框内的跳转
-            document.getElementById('settingsBtn').onclick = () => showModal(settingsModal);
+            document.getElementById('viewOrderBtn').onclick = renderOrderDetails;
+            document.getElementById('orderCloseBtn').onclick = () => hideModal(document.getElementById('orderModal'));
             
+            document.getElementById('settingsBtn').onclick = () => showModal(document.getElementById('settingsModal'));
+            document.getElementById('settingsCloseBtn').onclick = () => hideModal(document.getElementById('settingsModal'));
+            
+            // 设置跳转
             document.getElementById('modalEditMenuBtn').onclick = () => window.location.href = 'edit_menu.html';
             document.getElementById('modalIncomeSummaryBtn').onclick = () => window.location.href = 'income_summary.html';
             document.getElementById('modalPurchaseManagerBtn').onclick = () => window.location.href = '16.36.html';
-            document.getElementById('settingsCloseBtn').onclick = () => hideModal(settingsModal);
 
-            // 备注框输入事件 (性能优化点)
-            tableNotesInput.addEventListener('input', () => {
-                if (currentTableNumber === null) {
-                    tableNotesInput.value = '';
-                    return;
-                }
+            // 结算与清空
+            document.getElementById('checkoutBtn').onclick = async () => {
+                if(!confirm(`确认结算桌号 ${currentTableNumber}？`)) return;
                 
-                const currentOrderData = tableOrders.get(currentTableNumber);
-                currentOrderData.notes = tableNotesInput.value.trim();
+                const data = tableOrders.get(currentTableNumber);
+                if(!data || data.items.length === 0) return;
                 
-                if (!tableOrders.has(currentTableNumber)) {
-                    tableOrders.set(currentTableNumber, { items: [], notes: currentOrderData.notes });
-                }
-
-                debouncedSaveCloudData(); 
-                renderTableGrid(); 
-            });
-
-
-            // 模态框和核心交互
-            document.getElementById('table-display').onclick = () => {
-                renderTableGrid();
-                showModal(tableModal);
+                const total = data.items.reduce((s, i) => s + i.price * i.quantity, 0);
+                const record = {
+                    table: currentTableNumber,
+                    items: [...data.items],
+                    notes: data.notes,
+                    total: total,
+                    timestamp: Date.now() // 使用时间戳
+                };
+                
+                globalCloudData.income_data.total += total;
+                globalCloudData.income_data.closedOrders.push(record);
+                
+                // 清空该桌
+                tableOrders.set(currentTableNumber, { items: [], notes: '' });
+                document.getElementById('table-notes-input').value = '';
+                
+                await saveCloudData(); // 强制同步
+                hideModal(document.getElementById('orderModal'));
+                renderMenu();
+                updateTotals();
+                alert(`结算成功！收款: ${total.toLocaleString()} Ks`);
             };
 
-            document.getElementById('viewOrderBtn').onclick = () => {
-                if (currentTableNumber === null) {
-                    alert('请先选择桌号！');
-                    renderTableGrid();
-                    showModal(tableModal);
-                    return;
-                }
-                renderOrderDetails();
+            document.getElementById('clearOrderBtn').onclick = async () => {
+                if(!confirm(`确定清空桌号 ${currentTableNumber} 的所有已点菜品吗？`)) return;
+                tableOrders.set(currentTableNumber, { items: [], notes: '' });
+                document.getElementById('table-notes-input').value = '';
+                debouncedSaveCloudData();
+                hideModal(document.getElementById('orderModal'));
+                renderMenu();
+                updateTotals();
             };
-
-            document.getElementById('checkoutBtn').onclick = checkoutAndSaveIncome;
-            document.getElementById('clearOrderBtn').onclick = resetOrder;
-            document.getElementById('orderCloseBtn').onclick = () => hideModal(orderModal);
-            document.getElementById('closeModalBtn').onclick = () => hideModal(tableModal);
             
-            window.onclick = function(event) {
-                if (event.target == tableModal) {
-                    hideModal(tableModal);
-                }
-                if (event.target == orderModal) {
-                    hideModal(orderModal);
-                }
-                if (event.target == settingsModal) {
-                    hideModal(settingsModal);
-                }
-            }
-            
-            // 绑定菜单行点击交互（只绑定一次）
-            bindMenuInteractions();
-        }
-        
-        // 页面启动 (这里是关键！确保只有初始化操作)
-        document.addEventListener('DOMContentLoaded', async () => {
-            await loadCloudData();
-            document.getElementById('loading-overlay').style.display = 'none';
-            renderMenu();
-            bindEventListeners();
-            renderTableGrid();
-            
-            // 默认选择桌号 1
-            selectNewTable('1');
+            // 点击遮罩关闭
+            window.onclick = (e) => {
+                if (e.target.classList.contains('modal')) hideModal(e.target);
+            };
         });
     </script>
 </body>
