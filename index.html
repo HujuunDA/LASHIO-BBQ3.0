@@ -137,6 +137,7 @@
             bottom: 0; 
             box-sizing: border-box; 
             box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1); 
+            z-index: 15; /* 确保在最上层，但低于 modal */
         }
         /* 修改: 让查看订单按钮和顶部按钮保持一致的红色风格 */
         .view-order-btn {
@@ -150,8 +151,8 @@
             transition: opacity 0.2s; 
             font-weight: bold;
         }
-        /* Modal Styles (保持不变) */
-        .modal { display: none; position: fixed; z-index: 20; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0, 0, 0, 0.7); justify-content: center; align-items: center; }
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 20; left: 0; top: 0; width: 100%; height: 100%; overflow: hidden; background-color: rgba(0, 0, 0, 0.7); justify-content: center; align-items: center; }
         .modal-content { background-color: #fefefe; padding: 20px; border-radius: 10px; width: 80%; max-width: 400px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); text-align: center; }
         .modal-content h2 { color: #FF4500; margin-top: 0; }
         .table-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
@@ -160,7 +161,54 @@
         .table-number-btn.selected { background-color: #FF8C00; color: white; border-color: #FF4500; } 
         .table-number-btn.selected.occupied { background-color: #FF8C00; border-color: #FF4500; }
         .close-btn { background-color: #FF4500; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        .order-modal-content { background-color: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 500px; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); text-align: left; }
+        
+        /* --- 🌟 核心优化：订单详情弹窗布局 --- */
+        .order-modal-content { 
+            background-color: white; 
+            /* 移除原来的 padding，由子元素控制，以便滚动时不留白 */
+            padding: 0; 
+            border-radius: 10px; 
+            width: 90%; 
+            max-width: 500px; 
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); 
+            text-align: left;
+            
+            /* Flex 布局：实现头部底部固定，中间滚动 */
+            display: flex;
+            flex-direction: column;
+            max-height: 85vh; /* 限制最大高度为屏幕的 85% */
+            overflow: hidden; /* 防止整个卡片出现双重滚动条 */
+        }
+        
+        /* 固定的头部区域 */
+        .order-modal-header-section {
+            padding: 20px 20px 5px 20px;
+            flex-shrink: 0; /* 不许压缩 */
+            background-color: white;
+            border-radius: 10px 10px 0 0;
+            z-index: 2;
+        }
+        
+        /* 可滚动的中间区域 */
+        .order-scrollable-area {
+            flex-grow: 1; /* 占据剩余空间 */
+            overflow-y: auto; /* 允许垂直滚动 */
+            padding: 5px 20px;
+            -webkit-overflow-scrolling: touch; /* iOS 平滑滚动 */
+            border-top: 1px dashed #eee;
+            border-bottom: 1px dashed #eee;
+        }
+
+        /* 固定的底部区域 */
+        .order-modal-footer-section {
+            padding: 10px 20px 20px 20px;
+            flex-shrink: 0; /* 不许压缩 */
+            background-color: #f9f9f9; /* 稍微变灰，区分底部 */
+            border-top: 1px solid #eee;
+            border-radius: 0 0 10px 10px;
+            z-index: 2;
+        }
+
         /* 订单操作栏布局 */
         .order-actions { 
             display: flex; 
@@ -182,6 +230,14 @@
         .clear-btn { background-color: #FF8C00; color: white; }
         .close-order-btn { background-color: #ddd; color: #333; }
         
+        .order-total-display {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #FF4500;
+            text-align: right;
+            margin-bottom: 5px;
+        }
+
         /* 菜单列表顶部间距调整 */
         .menu-container { margin-top: 60px; }
         /* 新增加载层样式 */
@@ -223,23 +279,29 @@
 
     <div id="orderModal" class="modal">
         <div class="order-modal-content">
-            <div class="order-header">
-                <div class="order-title" id="orderModalTitle">桌号: N/A</div>
+            
+            <div class="order-modal-header-section">
+                <div class="order-header">
+                    <div class="order-title" id="orderModalTitle" style="font-size: 1.2em; font-weight: bold; color: #333;">桌号: N/A</div>
+                </div>
+                <div id="orderModalNotes" style="font-style: italic; color: #FF4500; margin-bottom: 5px; font-size: 0.9em;"></div>
             </div>
-            <div id="orderModalNotes" style="font-style: italic; color: #FF4500; margin-bottom: 10px;"></div>
-            <div class="order-hr"></div>
-            <div class="order-content" id="orderDetailsContent">
-            </div>
-            <div class="order-hr"></div>
-            <div class="order-total-display" id="orderModalTotal">总额: 0 Ks</div>
-            <div class="order-actions">
-                <button class="checkout-btn" id="checkoutBtn">结算</button>
-                
-                <div style="display: flex; gap: 10px;">
-                    <button class="clear-btn" id="clearOrderBtn">清空订单</button>
-                    <button class="close-order-btn" id="orderCloseBtn">关闭</button>
+
+            <div class="order-scrollable-area" id="orderDetailsContent">
+                </div>
+
+            <div class="order-modal-footer-section">
+                <div class="order-total-display" id="orderModalTotal">总额: 0 Ks</div>
+                <div class="order-actions">
+                    <button class="checkout-btn" id="checkoutBtn">结算</button>
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <button class="clear-btn" id="clearOrderBtn">清空</button>
+                        <button class="close-order-btn" id="orderCloseBtn">关闭</button>
+                    </div>
                 </div>
             </div>
+
         </div>
     </div>
     
@@ -384,7 +446,7 @@
         const orderCountElement = document.getElementById('orderCount');
         const tableModal = document.getElementById('tableModal');
         const orderModal = document.getElementById('orderModal');
-        const settingsModal = document.getElementById('settingsModal'); // 新增
+        const settingsModal = document.getElementById('settingsModal'); 
         const tableDisplay = document.getElementById('table-display');
         const tableNotesInput = document.getElementById('table-notes-input'); 
         let currentTableNumber = null;
@@ -608,10 +670,10 @@
                 return;
             }
 
-            let html = '<ul style="list-style-type: none; padding: 0;">';
+            let html = '<ul style="list-style-type: none; padding: 0; margin: 0;">';
             currentItems.forEach(item => {
                 html += `
-                    <li style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #eee;">
+                    <li style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px dashed #eee;">
                         <span style="font-weight: bold;">${item.name}</span>
                         <span style="flex-grow: 1; text-align: center;">x ${item.quantity}</span>
                         <span>${(item.price * item.quantity).toLocaleString()} Ks</span>
@@ -779,4 +841,3 @@
     </script>
 </body>
 </html>
-
