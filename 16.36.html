@@ -338,7 +338,7 @@
             }
         }, 1500);
 
-        // --- 渲染逻辑 (保留) ---
+        // --- 渲染逻辑 ---
         function renderAll() {
             renderProductList();
             renderCategoryDatalist(); 
@@ -360,7 +360,7 @@
             }
         }
         
-        function renderProductList() { /* ... function body unchanged ... */
+        function renderProductList() { 
             const container = document.getElementById('productList');
             container.innerHTML = '';
             const tmpl = globalData.purchase_data.productTemplate || {};
@@ -419,7 +419,7 @@
             }
         }
         
-        function renderCategoryDatalist() { /* ... function body unchanged ... */
+        function renderCategoryDatalist() { 
             const datalist = document.getElementById('categoryDatalist');
             const tmpl = globalData.purchase_data.productTemplate || {};
             
@@ -434,7 +434,7 @@
             datalist.innerHTML = html;
         }
 
-        function renderCart() { /* ... function body unchanged ... */
+        function renderCart() { 
             const container = document.getElementById('cartList');
             container.innerHTML = '';
             const cart = globalData.purchase_data.cartData || [];
@@ -471,7 +471,7 @@
             updateGrandTotal();
         }
 
-        // --- 交互 (保留) ---
+        // --- 交互 ---
 
         window.updateTemplateQty = (cat, index, delta, manualQty) => {
             const item = globalData.purchase_data.productTemplate[cat][index];
@@ -636,10 +636,10 @@
             return todayTotal;
         }
 
-        // --- 核心修改：调整 copyText 函数中收入和支出的顺序 ---
+        // --- 已修改：增加盈利计算功能 ---
         window.copyText = () => {
             const cart = globalData.purchase_data.cartData;
-            const todayIncome = getTodayIncome(); // 获取今日收入
+            const todayIncome = getTodayIncome(); // 今日收入
             const date = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
             let text = `📅 采购单 (${date}):\n`;
@@ -666,8 +666,13 @@
                 pendingItems.forEach(i => text += `⬜ ${i.name} (x${i.qty || 1})\n`);
             }
 
-            text += `\n💰 采购总支出: ${totalPurchaseCost.toLocaleString()} Ks\n`; // 先写采购支出
-            text += `💵 今日总收入: ${todayIncome.toLocaleString()} Ks\n`;      // 再写今日收入
+            // 计算盈利 (收入 - 支出)
+            const profit = todayIncome - totalPurchaseCost;
+            const profitStatus = profit >= 0 ? '📈 今日盈利' : '📉 今日亏损';
+
+            text += `\n💰 采购总支出: ${totalPurchaseCost.toLocaleString()} Ks\n`;
+            text += `💵 今日总收入: ${todayIncome.toLocaleString()} Ks\n`;
+            text += `✨ ${profitStatus}: ${Math.abs(profit).toLocaleString()} Ks\n`; // 显示盈利/亏损金额
             text += '------------------------------';
             
             navigator.clipboard.writeText(text).then(() => alert("清单已复制"));
