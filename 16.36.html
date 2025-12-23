@@ -636,10 +636,10 @@
             return todayTotal;
         }
 
-        // --- 已修改：增加盈利计算功能 ---
+        // --- 已修改：增加盈利负数显示功能 ---
         window.copyText = () => {
             const cart = globalData.purchase_data.cartData;
-            const todayIncome = getTodayIncome(); // 今日收入
+            const todayIncome = getTodayIncome(); 
             const date = new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit' });
 
             let text = `📅 采购单 (${date}):\n`;
@@ -668,11 +668,19 @@
 
             // 计算盈利 (收入 - 支出)
             const profit = todayIncome - totalPurchaseCost;
-            const profitStatus = profit >= 0 ? '📈 今日盈利' : '📉 今日亏损';
+            
+            // 自动判断图标和数字显示
+            let profitStr = "";
+            if (profit >= 0) {
+                profitStr = `📈 今日盈利: ${profit.toLocaleString()} Ks`;
+            } else {
+                // 如果是亏损，直接使用 profit.toLocaleString() 它会自动带上负号
+                profitStr = `📉 今日亏损: ${profit.toLocaleString()} Ks`;
+            }
 
             text += `\n💰 采购总支出: ${totalPurchaseCost.toLocaleString()} Ks\n`;
             text += `💵 今日总收入: ${todayIncome.toLocaleString()} Ks\n`;
-            text += `✨ ${profitStatus}: ${Math.abs(profit).toLocaleString()} Ks\n`; // 显示盈利/亏损金额
+            text += `✨ ${profitStr}\n`; 
             text += '------------------------------';
             
             navigator.clipboard.writeText(text).then(() => alert("清单已复制"));
