@@ -2,289 +2,177 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>收入汇总</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据中心-全功能修复版</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background: #f7f7f7; padding-bottom: 60px; -webkit-text-size-adjust: 100%; touch-action: manipulation; }
-        
-        .header-bar { 
-            background: #FF8C00; color: white; padding: 15px 20px; 
-            display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 4px 12px rgba(255,140,0,0.2);
-            position: sticky; top: 0; z-index: 10;
-        }
-        .header-bar h2 { margin: 0; font-size: 20px; font-weight: 700; }
-        .back-btn { background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 15px; border-radius: 20px; font-weight: 600; cursor: pointer; font-size: 14px; }
-        .back-btn:active { background: rgba(255,255,255,0.4); }
-
-        /* 仪表盘卡片 */
-        .dashboard { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; margin-top: 0; }
-        .card { background: white; padding: 20px; border-radius: 16px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .card.big { grid-column: span 2; background: linear-gradient(135deg, #fff, #fff8f0); border: 1px solid #ffe0b2; }
-        
-        .val { font-size: 24px; font-weight: 800; color: #FF4500; margin-bottom: 5px; }
-        .val.big { font-size: 32px; }
-        .label { font-size: 13px; color: #888; font-weight: 500; }
-
-        /* 列表区域通用样式 */
-        .section-title { padding: 0 20px; margin-top: 20px; font-size: 18px; font-weight: 700; color: #333; display: flex; align-items: center; justify-content: space-between; }
-        .order-list { padding: 15px 20px; }
-        
-        .order-card { 
-            background: white; border-radius: 12px; padding: 15px; margin-bottom: 15px; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.03); position: relative;
-            transition: transform 0.2s;
-        }
-        
-        /* 待结算特有样式 (区分颜色) */
-        .pending-card { border-left: 5px solid #FF4500; background: #fffcfc; }
-        .pending-badge { background: #FF4500; color: white; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: bold; }
-
-        /* 已结算特有样式 */
-        .history-card { border-left: 5px solid #4CAF50; }
-        .history-badge { background: #4CAF50; color: white; padding: 4px 8px; border-radius: 6px; font-size: 13px; font-weight: bold; }
-
-        .order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px dashed #eee; }
-        .time { font-size: 13px; color: #999; }
-        
-        .items { font-size: 15px; color: #555; line-height: 1.6; margin-bottom: 10px; }
-        .item-row { display: flex; justify-content: space-between; }
-        
-        .total-row { display: flex; justify-content: space-between; margin-top: 10px; font-weight: 800; font-size: 17px; color: #333; border-top: 1px solid #f5f5f5; padding-top: 10px; }
-        
-        .delete-single-btn { 
-            background: #ffebee; color: #d32f2f; 
-            border: 1px solid #ffcdd2;
-            padding: 6px 12px; 
-            border-radius: 6px; 
-            font-size: 13px; 
-            font-weight: 600; 
-            cursor: pointer;
-            margin-left: 10px;
-        }
-        .delete-single-btn:active { background: #ef5350; color: white; }
-
-        .clear-all { display: block; width: 90%; margin: 30px auto; padding: 15px; background: #eee; color: #666; border: none; border-radius: 12px; font-weight: 600; font-size: 15px; cursor: pointer; }
-        
-        .empty-tip { text-align: center; color: #bbb; padding: 20px; font-size: 14px; background: #fff; border-radius: 12px; margin: 10px 20px; border: 1px dashed #ddd; }
-
-        #saveIndicator { position: fixed; top: 70px; right: 20px; background: rgba(0,0,0,0.7); color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; z-index: 99; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-        #saveIndicator.show { opacity: 1; }
+        body { font-family: -apple-system, sans-serif; background: #f4f4f4; margin: 0; padding: 20px; color: #333; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .back-btn { padding: 10px 20px; background: #FF8C00; color: white; border-radius: 10px; text-decoration: none; font-weight: bold; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .total-amount { font-size: 26px; font-weight: 900; color: #FF4500; margin-top: 5px; }
+        .filter-bar { display: flex; gap: 8px; margin-bottom: 15px; }
+        .filter-btn { flex: 1; padding: 12px 5px; border: none; background: white; border-radius: 10px; color: #666; font-size: 13px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .filter-btn.active { background: #FF8C00; color: white; }
+        .tool-box { display: flex; gap: 10px; margin-bottom: 20px; }
+        .tool-btn { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 12px; background: #fff; color: #666; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 5px; }
+        .tool-btn.danger { color: #ff4d4f; border-color: #ffa39e; }
+        .order-item { background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px; position: relative; }
+        .order-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed #eee; padding-bottom: 10px; margin-bottom: 10px; }
+        .del-btn { background: #fff1f0; color: #ff4d4f; border: 1px solid #ffa39e; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+        .table-tag { background: #FF8C00; color: white; padding: 3px 10px; border-radius: 6px; font-size: 14px; font-weight: bold; }
+        /* 恢复设备名标签样式 */
+        .device-tag { background: #f0f0f0; color: #666; padding: 3px 8px; border-radius: 6px; font-size: 11px; margin-left: 8px; }
+        .item-row { display: flex; justify-content: space-between; font-size: 14px; color: #555; margin-bottom: 5px; }
+        .order-footer { text-align: right; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f9f9f9; font-weight: bold; color: #FF4500; font-size: 16px; }
+        .stat-row { display: flex; align-items: center; background: white; padding: 15px; border-radius: 12px; margin-bottom: 8px; }
+        .stat-rank { width: 35px; font-weight: 900; color: #FF8C00; font-size: 18px; }
+        .stat-name { flex: 1; font-weight: bold; }
+        .stat-count { background: #fff5e6; color: #FF8C00; padding: 5px 12px; border-radius: 20px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div id="saveIndicator">☁️ 已同步</div>
 
-    <header class="header-bar">
-        <h2>💰 营收报表</h2>
-        <button class="back-btn" onclick="window.location.href='index.html'">返回点单</button>
-    </header>
-
-    <div class="dashboard">
-        <div class="card big">
-            <div class="val big" id="todayIncome">0</div>
-            <div class="label">今日总收入 (Ks)</div>
-        </div>
-        <div class="card">
-            <div class="val" id="todayOrders">0</div>
-            <div class="label">今日单数</div>
-        </div>
-        <div class="card">
-            <div class="val" id="pendingTablesCount" style="color: #FF4500;">0</div>
-            <div class="label">当前正在用餐</div>
-        </div>
+    <div class="header">
+        <h2 style="margin:0;">📊 数据中心</h2>
+        <a href="index.html" class="back-btn">返回点单</a>
     </div>
 
-    <div class="section-title">
-        <span>🔥 待结算 (进行中)</span>
+    <div class="card">
+        <div style="color:#888; font-size:14px; font-weight: bold;" id="report-title">今日营业额</div>
+        <div class="total-amount" id="total-money">加载中...</div>
     </div>
-    <div id="pendingList">
-        </div>
 
-    <div class="section-title" style="margin-top: 30px;">
-        <span>🧾 历史账单 (已结)</span>
+    <div class="filter-bar">
+        <button class="filter-btn active" onclick="changeFilter('today', this)">今天</button>
+        <button class="filter-btn" onclick="changeFilter('all', this)">全部订单</button>
+        <button class="filter-btn" onclick="changeFilter('stats', this)">销量统计</button>
     </div>
-    <div class="order-list" id="historyList">
-        </div>
-    
-    <button class="clear-all" onclick="clearAll()">🗑️ 清空所有历史记录 (慎用)</button>
+
+    <div class="tool-box">
+        <button class="tool-btn" onclick="exportToCSV()">📥 导出表格 (CSV)</button>
+        <button class="tool-btn danger" onclick="clearAllData()">🗑️ 清空所有数据</button>
+    </div>
+
+    <div id="order-list"></div>
 
     <script>
-        // --- 配置 ---
-        const JSONBIN_ID = '69174442ae596e708f5901ae'; 
-        const JSONBIN_MASTER_KEY = '$2a$10$ol9N5tLV0G2AnDYaF4sO4O2l0RoR8OSXagA4IUy2wiwdntZDuzRh2';
-        const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${JSONBIN_ID}`;
-        const CACHE_KEY = 'bbq_app_local_cache'; 
+        const API = { 
+            id: '69174442ae596e708f5901ae', 
+            key: '$2a$10$ol9N5tLV0G2AnDYaF4sO4O2l0RoR8OSXagA4IUy2wiwdntZDuzRh2', 
+            url: 'https://api.jsonbin.io/v3/b/69174442ae596e708f5901ae' 
+        };
 
-        let globalData = {};
-
-        function loadCache() { const c = localStorage.getItem(CACHE_KEY); return c ? JSON.parse(c) : null; }
-        function saveCache(data) { localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }
+        let db_record = null;
 
         async function init() {
-            const local = loadCache();
-            if (local) { globalData = local; render(); }
-            
             try {
-                const res = await fetch(JSONBIN_URL + '/latest', { headers: { 'X-Master-Key': JSONBIN_MASTER_KEY } });
+                const res = await fetch(API.url + '/latest', { headers: { 'X-Master-Key': API.key, 'Cache-Control': 'no-cache' } });
                 const json = await res.json();
-                if (json.record) {
-                    globalData = json.record;
-                    if(!globalData.income_data) globalData.income_data = { total: 0, closedOrders: [] };
-                    if(!globalData.table_orders) globalData.table_orders = {};
-                    saveCache(globalData);
-                    render();
-                }
-            } catch(e) { console.log("使用本地数据"); }
+                db_record = json.record;
+                renderReport('today');
+            } catch (e) { alert("数据同步失败"); }
         }
 
-        async function sync() {
-            const ind = document.getElementById('saveIndicator');
-            ind.textContent = "同步中..."; ind.classList.add('show');
-            saveCache(globalData);
-            try {
-                await fetch(JSONBIN_URL, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'X-Master-Key': JSONBIN_MASTER_KEY },
-                    body: JSON.stringify(globalData)
-                });
-                ind.textContent = "✅ 已同步";
-                setTimeout(() => ind.classList.remove('show'), 2000);
-            } catch(e) {
-                ind.textContent = "⚠️ 仅本地保存";
-                setTimeout(() => ind.classList.remove('show'), 3000);
+        // 导出功能
+        function exportToCSV() {
+            const orders = db_record.income_data.closedOrders || [];
+            if (orders.length === 0) return alert("没有数据可导出");
+            let csv = "\uFEFF日期,时间,桌号,菜品,金额,备注,收银设备\n";
+            orders.forEach(o => {
+                const d = new Date(o.timestamp);
+                const date = d.toLocaleDateString();
+                const time = d.toLocaleTimeString();
+                const items = o.items.map(i => `${i.name}x${i.quantity}`).join('; ');
+                csv += `"${date}","${time}","${o.table}","${items}","${o.total}","${o.notes||''}","${o.device||''}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `报表_${new Date().getTime()}.csv`;
+            link.click();
+        }
+
+        // 清空功能
+        async function clearAllData() {
+            if (prompt("请输入 'DELETE' 确认清空所有历史数据：") !== 'DELETE') return;
+            if (confirm("操作不可逆！确认清空？")) {
+                db_record.income_data = { total: 0, closedOrders: [] };
+                await fetch(API.url, { method: 'PUT', headers: { 'X-Master-Key': API.key, 'Content-Type': 'application/json' }, body: JSON.stringify(db_record) });
+                location.reload();
             }
         }
 
-        function render() {
-            const income = globalData.income_data || { total: 0, closedOrders: [] };
-            const tables = globalData.table_orders || {};
-            
-            // --- 1. 渲染待结算 (Pending) ---
-            const pendingContainer = document.getElementById('pendingList');
-            pendingContainer.innerHTML = '';
-            let activeTableCount = 0;
+        function changeFilter(type, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const titles = { 'today': '今日营业额', 'all': '历史总营业额', 'stats': '销量排行榜' };
+            document.getElementById('report-title').innerText = titles[type];
+            renderReport(type);
+        }
 
-            const pendingTables = Object.entries(tables).filter(([k, v]) => v.items && v.items.length > 0);
-            
-            if (pendingTables.length === 0) {
-                pendingContainer.innerHTML = '<div class="empty-tip">当前没有进行中的订单</div>';
-            } else {
-                pendingTables.forEach(([tableNum, data]) => {
-                    activeTableCount++;
-                    const total = data.items.reduce((sum, i) => sum + (i.price * i.quantity), 0);
-                    
-                    // 详情只显示前3项，多了显示...
-                    let itemsHtml = data.items.slice(0, 5).map(i => `
-                        <div class="item-row">
-                            <span>${i.name} x${i.quantity}</span>
-                            <span style="color:#888;">${(i.price * i.quantity).toLocaleString()}</span>
-                        </div>
-                    `).join('');
-                    if (data.items.length > 5) itemsHtml += '<div style="color:#999; font-size:12px; text-align:center;">...更多菜品请在点单页查看</div>';
-
-                    const div = document.createElement('div');
-                    div.className = 'order-card pending-card'; // 使用特殊样式
-                    div.style.margin = "10px 20px"; // 特殊边距
-                    div.innerHTML = `
-                        <div class="order-header">
-                            <span class="pending-badge">桌号 ${tableNum}</span>
-                            <span style="color:#FF4500; font-weight:bold; font-size:13px;">进行中...</span>
-                        </div>
-                        <div class="items">
-                            ${itemsHtml}
-                            ${data.notes ? `<div style="margin-top:5px; color:#FF4500; font-style:italic;">备注: ${data.notes}</div>` : ''}
-                        </div>
-                        <div class="total-row">
-                            <span>当前消费</span>
-                            <span style="color:#FF4500">${total.toLocaleString()} Ks</span>
-                        </div>
-                    `;
-                    pendingContainer.appendChild(div);
-                });
+        async function deleteOrder(timestamp) {
+            if(!confirm("确定删除这笔单子？")) return;
+            const idx = db_record.income_data.closedOrders.findIndex(o => o.timestamp === timestamp);
+            if(idx > -1) {
+                const removed = db_record.income_data.closedOrders.splice(idx, 1)[0];
+                db_record.income_data.total -= removed.total;
+                await fetch(API.url, { method: 'PUT', headers: { 'X-Master-Key': API.key, 'Content-Type': 'application/json' }, body: JSON.stringify(db_record) });
+                location.reload();
             }
-            document.getElementById('pendingTablesCount').textContent = activeTableCount;
+        }
 
-
-            // --- 2. 渲染今日数据统计 ---
-            const todayStart = new Date().setHours(0,0,0,0);
-            const todayRecs = income.closedOrders.filter(r => new Date(r.timestamp).getTime() >= todayStart);
-            const todayTotal = todayRecs.reduce((sum, r) => sum + r.total, 0);
+        function renderReport(type) {
+            const listDiv = document.getElementById('order-list');
+            const orders = db_record.income_data.closedOrders || [];
             
-            document.getElementById('todayIncome').textContent = todayTotal.toLocaleString();
-            document.getElementById('todayOrders').textContent = todayRecs.length;
-
-
-            // --- 3. 渲染历史列表 (History) ---
-            const historyContainer = document.getElementById('historyList');
-            historyContainer.innerHTML = '';
-            
-            const history = [...income.closedOrders].reverse();
-            
-            if(history.length === 0) {
-                historyContainer.innerHTML = '<div class="empty-tip">暂无已结算的订单</div>';
+            if (type === 'stats') {
+                document.getElementById('total-money').innerText = "销量概览";
+                let salesMap = {};
+                (db_record.menu_data || []).forEach(m => salesMap[m.name] = 0);
+                orders.forEach(o => o.items.forEach(i => {
+                    if(salesMap[i.name] !== undefined) salesMap[i.name] += i.quantity;
+                    else salesMap[i.name] = i.quantity;
+                }));
+                const sorted = Object.entries(salesMap).sort((a,b) => b[1] - a[1]);
+                let h = '';
+                sorted.forEach(([n, c], i) => {
+                    h += `<div class="stat-row"><div class="stat-rank">${i+1}</div><div class="stat-name">${n}</div><div class="stat-count">${c} 份</div></div>`;
+                });
+                listDiv.innerHTML = h;
                 return;
             }
 
-            history.forEach((rec, reversedIndex) => {
-                const realIndex = income.closedOrders.length - 1 - reversedIndex;
-                const date = new Date(rec.timestamp);
-                const timeStr = `${date.getMonth()+1}/${date.getDate()} ${String(date.getHours()).padStart(2,'0')}:${String(date.getMinutes()).padStart(2,'0')}`;
-                
-                let itemsHtml = '';
-                if (rec.items && rec.items.length > 0) {
-                    itemsHtml = rec.items.map(i => `
-                        <div class="item-row">
-                            <span>${i.name} x${i.quantity}</span>
-                            <span style="color:#888;">${(i.price * i.quantity).toLocaleString()}</span>
-                        </div>
-                    `).join('');
-                }
+            const startTime = type === 'today' ? new Date().setHours(0,0,0,0) : 0;
+            const filtered = orders.filter(o => o.timestamp >= startTime).reverse();
+            document.getElementById('total-money').innerHTML = filtered.reduce((s,o)=>s+o.total, 0).toLocaleString() + " <small>Ks</small>";
 
-                const div = document.createElement('div');
-                div.className = 'order-card history-card';
-                div.innerHTML = `
+            let h = '';
+            filtered.forEach(o => {
+                const timeStr = new Date(o.timestamp).toLocaleString([], {month:'numeric', day:'numeric', hour:'2-digit', minute:'2-digit'});
+                let itemsH = o.items.map(i => `<div class="item-row"><span>${i.name} x ${i.quantity}</span><span>${(i.price*i.quantity).toLocaleString()}</span></div>`).join('');
+                
+                // 核心：找回设备身份标签
+                const deviceTag = `<span class="device-tag">👤 ${o.device || '默认'}</span>`;
+
+                h += `
+                <div class="order-item">
                     <div class="order-header">
                         <div>
-                            <span class="history-badge">桌号 ${rec.table}</span>
-                            <span class="time">${timeStr}</span>
+                            <span class="table-tag">${o.table}号桌</span>
+                            ${deviceTag}
                         </div>
-                        <button class="delete-single-btn" onclick="deleteSingleOrder(${realIndex})">🗑 删除</button>
+                        <button class="del-btn" onclick="deleteOrder(${o.timestamp})">删除</button>
                     </div>
-                    <div class="items">
-                        ${itemsHtml}
-                        ${rec.notes ? `<div style="margin-top:5px; color:#888; font-style:italic;">备注: ${rec.notes}</div>` : ''}
-                    </div>
-                    <div class="total-row">
-                        <span>总计</span>
-                        <span style="color:#4CAF50">${rec.total.toLocaleString()} Ks</span>
-                    </div>
-                `;
-                historyContainer.appendChild(div);
+                    <div style="font-size:11px; color:#999; margin-bottom:10px;">${timeStr}</div>
+                    ${itemsH}
+                    ${o.notes ? `<div style="font-size:12px; color:#FF8C00; background:#fff9f0; padding:5px; margin-top:5px; border-radius:5px;">备注: ${o.notes}</div>` : ''}
+                    <div class="order-footer">合计: ${o.total.toLocaleString()} Ks</div>
+                </div>`;
             });
+            listDiv.innerHTML = h || '<div style="text-align:center; padding:50px; color:#999;">无订单记录</div>';
         }
 
-        window.deleteSingleOrder = async (index) => {
-            const rec = globalData.income_data.closedOrders[index];
-            if(confirm(`⚠️ 确定删除桌号 ${rec.table} 的历史记录吗？金额 ${rec.total.toLocaleString()} 将被扣除。`)) {
-                globalData.income_data.total -= rec.total;
-                if(globalData.income_data.total < 0) globalData.income_data.total = 0;
-                globalData.income_data.closedOrders.splice(index, 1);
-                render();
-                await sync();
-            }
-        };
-
-        window.clearAll = async () => {
-            const pwd = prompt("❗ 警告：此操作将清空所有历史账单！\n请输入确认码 '8888' 继续：");
-            if(pwd === '8888') {
-                globalData.income_data = { total: 0, closedOrders: [] };
-                render();
-                await sync();
-            }
-        };
-
-        init();
+            init();
     </script>
 </body>
 </html>
